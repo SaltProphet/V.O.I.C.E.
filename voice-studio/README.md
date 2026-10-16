@@ -86,12 +86,12 @@ For an email-protected remote demo, see `SHARING.md` and use `Start-Demo-Sharing
 
 Narration source text and generated audio are under `content/onboarding/`; the synthetic narrator reference and design description are under `data/onboarding-narrator/`. `scripts/create_narrator.py` creates that synthetic speaker; `scripts/create_onboarding.py` generates and installs the audio in the personal and shared demo workspaces. Existing user recordings and profiles are preserved. The walkthrough is assembled from short narrated sections so it can also be edited as a saved session.
 
-## Immersive voice playground
+## Unified studio workspace
 
-The app now opens in the supplied HTML's animated voice playground. Select Nova Prime, Atlas Deep, Cyra Synth, or Echo ASMR, or choose one of your saved voices. Preview voice plays the reference. Synthesize & Play generates real speech and plays the result.
+The app opens in one workspace inspired by the Timbre layout: compact reactive visualizer, saved voices and dialogue side by side, a selected-take player, recording/import and reusable references, an expandable waveform editor, and a collapsible multitrack timeline. The spoken welcome and workspace tabs have been removed; existing narration files remain in the library.
 
-Pitch, Timbre Color, and Vibrato Flux shape the current clip when you press Apply & preview FX. Each processed result is a separate WAV. Download WAV downloads the current result; Open in editor transfers it to the recording editor. The top workspace tabs open recording/editing, timeline/export, and the spoken welcome. The original carrier-tone instrument remains available through Pulse Carrier.
+Select a character or saved voice, write dialogue, and press Generate speech. Load voice reference selects its recording for playback. Record microphone or Import audio preserves the original input and opens the editor. Selecting a library take or Edit selected take opens waveform trimming, cleanup, fades, pitch, color, and vibrato. Apply trim & cleanup creates a separate WAV. Add to timeline opens the timeline; save/reopen sessions or export a stereo mixed WAV there.
 
-Mic enables reactive microphone sensing; recording is under Recording & edit. Helix/vortex/dust and visualizer modes retain the original playful interface. Zen hides the interface; H, Space, or Escape restores it. Visual quality offers Full, Light, and Still modes. All graphics, fonts, and icons load locally.
+Zen view hides the workspace around the visualizer; Escape or Show interface restores it. Fluid curves, Frequency, and Helix respond to the selected-take player. Motion off removes ambient movement. The older immersive HTML and adapter remain in source for reference but are no longer mounted. Current cloning uses saved audio and exact transcripts; free-form VoiceDesign prompting and named cloud-provider voices are not part of this interface.
 
-See `IMMERSIVE-STUDIO.md` for implementation and verification details.
+See `UNIFIED-STUDIO.md` for the checkpoint and verification record. `IMMERSIVE-STUDIO.md` documents the previous layout.
