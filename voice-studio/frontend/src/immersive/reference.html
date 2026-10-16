@@ -1,0 +1,1675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraVoice AI - Fluid Monochrome Acoustic Genome</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Three.js for 3D Fluid Dynamics, Dust & DNA Helix -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+    :root {
+      --font-sans: 'Plus Jakarta Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --chroma-primary: #f8fafc;
+      --chroma-secondary: #94a3b8;
+      --chroma-glow: rgba(248, 250, 252, 0.25);
+      --panel-border: rgba(255, 255, 255, 0.08);
+      --panel-bg: rgba(6, 8, 13, 0.76);
+      --accent-tint: rgba(248, 250, 252, 0.06);
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: #030407;
+      color: #e2e8f0;
+      overflow-x: hidden;
+      user-select: none;
+      transition: background-color 1s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .font-mono-code {
+      font-family: var(--font-mono);
+    }
+
+    /* Dynamic Archetype Glassmorphism */
+    .glass-panel {
+      background: var(--panel-bg);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border: 1px solid var(--panel-border);
+      box-shadow: 0 30px 70px rgba(0, 0, 0, 0.94), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      transition: border-color 0.8s ease, background 0.8s ease, box-shadow 0.8s ease;
+    }
+
+    .glass-panel-glow {
+      position: relative;
+    }
+    .glass-panel-glow::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(135deg, var(--panel-border), rgba(255, 255, 255, 0.02) 60%, transparent);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      transition: background 0.8s ease;
+    }
+
+    /* Custom monochrome scrollbar */
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(3, 4, 7, 0.95);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.35);
+    }
+
+    /* Ultra-slow abyssal breathing pulse */
+    @keyframes void-pulse {
+      0%, 100% { opacity: 0.14; transform: scale(1); filter: blur(140px); }
+      50% { opacity: 0.28; transform: scale(1.08); filter: blur(170px); }
+    }
+    .animate-void-pulse {
+      animation: void-pulse 18s infinite ease-in-out;
+    }
+
+    /* Minimalist tactile sliders with dynamic reactive thumb */
+    input[type=range] {
+      -webkit-appearance: none;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 999px;
+      height: 4px;
+      outline: none;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      transition: background 0.2s;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: var(--chroma-primary);
+      cursor: pointer;
+      box-shadow: 0 0 10px var(--chroma-glow), 0 0 2px #000;
+      transition: transform 0.2s ease, background-color 0.6s ease, box-shadow 0.6s ease;
+    }
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.3);
+      box-shadow: 0 0 16px var(--chroma-glow), 0 0 4px #000;
+    }
+
+    #bg-webgl-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: auto;
+    }
+
+    /* HUD toggle transition states */
+    .hud-layer {
+      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), filter 0.6s ease;
+    }
+    .hud-hidden {
+      opacity: 0 !important;
+      transform: scale(0.97) translateY(8px);
+      pointer-events: none !important;
+      filter: blur(8px);
+    }
+
+    /* Floating restore trigger button */
+    #zen-restore-btn {
+      transition: opacity 0.4s ease, transform 0.4s ease, border-color 0.4s ease;
+    }
+  </style>
+</head>
+<body class="min-h-screen relative overflow-hidden bg-[#030407] text-slate-200 flex flex-col justify-between selection:bg-white/20 selection:text-white">
+
+  <!-- 3D Background Canvas (Monochrome Helix + Fluid & Dust Particle Fields) -->
+  <canvas id="bg-webgl-canvas"></canvas>
+
+  <!-- Deep Obsidian Fog & Atmospheric Depth Gradients (Dynamically reactive to archetype) -->
+  <div class="fixed inset-0 pointer-events-none z-[1] overflow-hidden">
+    <div id="glow-orb-1" class="absolute -top-40 -left-40 w-[38rem] h-[38rem] bg-white/[0.04] rounded-full blur-[160px] animate-void-pulse transition-all duration-1000"></div>
+    <div id="glow-orb-2" class="absolute top-1/3 -right-40 w-[42rem] h-[42rem] bg-white/[0.02] rounded-full blur-[190px] animate-void-pulse transition-all duration-1000" style="animation-delay: -6s;"></div>
+    <div id="glow-orb-3" class="absolute -bottom-32 left-1/4 w-[48rem] h-96 bg-white/[0.02] rounded-full blur-[170px] animate-void-pulse transition-all duration-1000" style="animation-delay: -11s;"></div>
+    
+    <!-- Micro fine-pitch grid overlay -->
+    <div class="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_85%)] opacity-70"></div>
+  </div>
+
+  <!-- Persistent Floating Trigger to Restore HUD when in Zen Mode -->
+  <div id="zen-restore-container" class="fixed top-5 right-6 z-50 pointer-events-auto opacity-0 translate-y-[-10px] transition-all duration-500">
+    <button id="zen-restore-btn" class="px-3.5 py-2 rounded-xl text-xs font-mono font-medium glass-panel flex items-center gap-2 hover:bg-white/10 text-zinc-300 hover:text-white shadow-2xl hover:scale-105 active:scale-95 transition-all">
+      <i data-lucide="eye" class="w-4 h-4 text-white"></i>
+      <span>Show Interface <span class="text-zinc-500 text-[10px]">[Space]</span></span>
+    </button>
+  </div>
+
+  <!-- Header Bar -->
+  <header id="main-header" class="hud-layer relative z-10 w-full px-6 py-3.5 flex items-center justify-between border-b glass-panel">
+    <div class="flex items-center gap-4">
+      <div id="logo-icon-box" class="relative flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-tr from-white/20 via-zinc-400/10 to-transparent p-[1px] shadow-lg shadow-black/80 transition-all duration-700">
+        <div class="w-full h-full bg-[#07090e] rounded-[10px] flex items-center justify-center">
+          <i data-lucide="dna" id="header-dna-icon" class="w-5 h-5 text-zinc-200 animate-spin transition-colors duration-700" style="animation-duration: 38s;"></i>
+        </div>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-2">
+            AuraVoice <span id="mode-badge" class="text-[10px] px-2.5 py-0.5 rounded-full font-mono font-medium tracking-wide bg-white/5 text-zinc-200 border border-white/10 transition-all duration-700">MONOCHROME ACOUSTIC</span>
+          </h1>
+        </div>
+        <p class="text-xs text-zinc-400 flex items-center gap-2">
+          <span>Dark-Field Dynamic Timbre Matrix</span>
+          <span id="tone-status-dot" class="inline-block w-1.5 h-1.5 rounded-full bg-zinc-300 shadow-[0_0_8px_rgba(255,255,255,0.7)] transition-all duration-500"></span>
+          <span id="tone-status-text" class="text-zinc-400 font-mono text-[10px] tracking-wide">IDLE HARMONICS</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Live Telemetry Badges & Particle Control Switch -->
+    <div class="flex items-center gap-2.5">
+      <!-- Live Microphone Detector Toggle -->
+      <button id="toggle-mic-btn" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-zinc-950/70 hover:bg-zinc-800/80 border border-white/10 text-zinc-300 hover:text-white transition-all flex items-center gap-2 shadow-sm">
+        <i data-lucide="mic" id="mic-icon" class="w-3.5 h-3.5 text-zinc-400 transition-colors"></i>
+        <span class="hidden sm:inline">Mic:</span> <span id="mic-status-label" class="text-zinc-400 font-mono">OFF</span>
+      </button>
+
+      <!-- Active Archetype Tone Palette Indicator -->
+      <div class="hidden md:flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-zinc-950/70 border border-white/10 shadow-inner">
+        <div class="flex flex-col text-right">
+          <span class="text-[9px] text-zinc-500 font-mono uppercase tracking-wider">Timbre Tone</span>
+          <span class="text-xs font-semibold text-zinc-200 font-mono-code flex items-center gap-1.5 justify-end" id="timbre-palette-name">
+            <span id="timbre-color-pip" class="w-2 h-2 rounded-full bg-slate-200 shadow-[0_0_8px_rgba(255,255,255,0.7)] transition-all duration-700"></span>
+            Platinum White
+          </span>
+        </div>
+      </div>
+
+      <!-- Helix & Fluid Motion Mode Toggle -->
+      <button id="toggle-helix-btn" class="hidden sm:flex px-3 py-1.5 rounded-lg text-xs font-medium bg-zinc-950/70 hover:bg-zinc-800/80 border border-white/10 text-zinc-300 hover:text-white transition-all items-center gap-2 shadow-sm">
+        <i data-lucide="layers" class="w-3.5 h-3.5 text-zinc-400"></i>
+        <span><span id="helix-mode-label" class="text-zinc-300 font-mono">Helix + Vortex</span></span>
+      </button>
+
+      <!-- Zen Watch Mode: Hide UI to just view the visuals -->
+      <button id="zen-toggle-btn" title="Toggle Zen View (Hide menus) [Press Space or H]" class="px-3.5 py-1.5 rounded-lg text-xs font-medium bg-white/10 hover:bg-white/20 border border-white/20 text-white flex items-center gap-2 shadow-[0_0_15px_rgba(255,255,255,0.08)] transition-all">
+        <i data-lucide="eye-off" class="w-3.5 h-3.5"></i>
+        <span class="hidden lg:inline">Zen View</span>
+      </button>
+    </div>
+  </header>
+  <main id="main-content" class="hud-layer relative z-10 flex-1 w-full max-w-7xl mx-auto px-4 py-4 md:py-6 flex flex-col justify-between gap-5 overflow-y-auto">
+    
+    <!-- Top Row: Biometric Archetypes & Multi-Mode Audio Oscilloscope Centerpiece -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+      
+      <!-- Left Panel: Biometric Archetype Personas -->
+      <div class="lg:col-span-4 flex flex-col gap-3">
+        <div class="glass-panel glass-panel-glow rounded-2xl p-4 flex flex-col justify-between h-full">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <i data-lucide="fingerprint" id="archetype-icon" class="w-4 h-4 text-zinc-300 transition-colors duration-700"></i>
+                <h2 class="text-xs font-semibold tracking-wider uppercase text-zinc-300">Biometric Archetypes</h2>
+              </div>
+              <span id="archetype-count-badge" class="text-[10px] font-mono bg-zinc-950/80 text-zinc-300 border border-white/10 px-2 py-0.5 rounded transition-all duration-700">4 PROFILES</span>
+            </div>
+
+            <!-- Voice List with Tone/Timbre nuances -->
+            <div class="space-y-2" id="voice-list">
+              <!-- Item 1: Nova (Platinum White / High Clarity) -->
+              <div class="voice-card active cursor-pointer p-3 rounded-xl border border-white/40 bg-white/[0.04] shadow-[0_0_20px_rgba(255,255,255,0.06)] transition-all duration-500 flex items-center justify-between" 
+                   data-voice="nova" data-base-pitch="1.0" data-base-freq="440" data-color="#f8fafc" data-secondary="#cbd5e1" data-chroma="platinum">
+                <div class="flex items-center gap-3">
+                  <div class="card-icon w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center text-white font-bold border border-white/20 transition-all duration-500">
+                    <i data-lucide="sparkles" class="w-4 h-4"></i>
+                  </div>
+                  <div>
+                    <h3 class="card-title text-sm font-semibold text-white transition-colors duration-500">Nova Prime</h3>
+                    <p class="text-[11px] text-zinc-400">Crisp Platinum • Pure Resonance</p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <span class="text-[10px] font-mono text-zinc-300">440 Hz</span>
+                  <div class="active-dot w-2 h-2 rounded-full bg-white ml-auto mt-1 shadow-[0_0_8px_rgba(255,255,255,0.9)] animate-pulse"></div>
+                </div>
+              </div>
+
+              <!-- Item 2: Atlas (Deep Obsidian Charcoal / Sub-Bass Warmth) -->
+              <div class="voice-card cursor-pointer p-3 rounded-xl border border-white/5 bg-zinc-950/40 hover:bg-zinc-900/40 transition-all duration-500 flex items-center justify-between" 
+                   data-voice="atlas" data-base-pitch="0.75" data-base-freq="210" data-color="#d4d4d8" data-secondary="#71717a" data-chroma="obsidian">
+                <div class="flex items-center gap-3">
+                  <div class="card-icon w-9 h-9 rounded-lg bg-zinc-800/50 flex items-center justify-center text-zinc-300 font-bold border border-zinc-700/40 transition-all duration-500">
+                    <i data-lucide="radio" class="w-4 h-4"></i>
+                  </div>
+                  <div>
+                    <h3 class="card-title text-sm font-semibold text-zinc-300 transition-colors duration-500">Atlas Deep</h3>
+                    <p class="text-[11px] text-zinc-500">Obsidian Charcoal • Sub-Bass Baritone</p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <span class="text-[10px] font-mono text-zinc-500">210 Hz</span>
+                </div>
+              </div>
+
+              <!-- Item 3: Cyra (Cool Lunar Silver / Cybernetic Fluid) -->
+              <div class="voice-card cursor-pointer p-3 rounded-xl border border-white/5 bg-zinc-950/40 hover:bg-zinc-900/40 transition-all duration-500 flex items-center justify-between" 
+                   data-voice="cyra" data-base-pitch="1.25" data-base-freq="620" data-color="#e0e7ff" data-secondary="#94a3b8" data-chroma="lunar">
+                <div class="flex items-center gap-3">
+                  <div class="card-icon w-9 h-9 rounded-lg bg-zinc-800/50 flex items-center justify-center text-zinc-300 font-bold border border-zinc-700/40 transition-all duration-500">
+                    <i data-lucide="cpu" class="w-4 h-4"></i>
+                  </div>
+                  <div>
+                    <h3 class="card-title text-sm font-semibold text-zinc-300 transition-colors duration-500">Cyra Synth</h3>
+                    <p class="text-[11px] text-zinc-500">Lunar Chrome • High-Velocity Flux</p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <span class="text-[10px] font-mono text-zinc-500">620 Hz</span>
+                </div>
+              </div>
+
+              <!-- Item 4: Echo (Smoked Quartz Amber Tint / ASMR Breath) -->
+              <div class="voice-card cursor-pointer p-3 rounded-xl border border-white/5 bg-zinc-950/40 hover:bg-zinc-900/40 transition-all duration-500 flex items-center justify-between" 
+                   data-voice="echo" data-base-pitch="0.9" data-base-freq="330" data-color="#e5e5e5" data-secondary="#a3a3a3" data-chroma="smoked">
+                <div class="flex items-center gap-3">
+                  <div class="card-icon w-9 h-9 rounded-lg bg-zinc-800/50 flex items-center justify-center text-zinc-300 font-bold border border-zinc-700/40 transition-all duration-500">
+                    <i data-lucide="wind" class="w-4 h-4"></i>
+                  </div>
+                  <div>
+                    <h3 class="card-title text-sm font-semibold text-zinc-300 transition-colors duration-500">Echo ASMR</h3>
+                    <p class="text-[11px] text-zinc-500">Smoked Quartz • Whispered Grain</p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <span class="text-[10px] font-mono text-zinc-500">330 Hz</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Biometric DNA stats footer -->
+          <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-zinc-400 font-mono">
+            <span class="flex items-center gap-1.5">
+              <span id="formant-dot" class="w-2 h-2 rounded-full bg-zinc-300 shadow-[0_0_6px_rgba(255,255,255,0.7)] transition-all duration-700"></span> Timbre Shift: <span id="stat-formant" class="text-zinc-200">0.0 st</span>
+            </span>
+            <span class="text-zinc-500">Fluid Motes: 10,800</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center & Right Panel: Dynamic Monochrome Oscilloscope & Visualizer -->
+      <div class="lg:col-span-8 flex flex-col gap-3">
+        <div class="glass-panel glass-panel-glow rounded-2xl p-5 flex flex-col justify-between h-full relative overflow-hidden" id="scope-card">
+          
+          <!-- Waveform display header -->
+          <div class="flex flex-wrap items-center justify-between gap-2 z-10">
+            <div class="flex items-center gap-3">
+              <span class="flex h-3 w-3 relative">
+                <span id="recording-pulse" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75 hidden"></span>
+                <span id="status-indicator" class="relative inline-flex rounded-full h-3 w-3 bg-zinc-300 shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all duration-700"></span>
+              </span>
+              <h2 class="text-xs font-semibold tracking-wider text-zinc-200 uppercase flex items-center gap-2">
+                Fluid Harmonic Resonator & Oscilloscope
+                <span id="synthesis-badge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-950 text-zinc-400 border border-white/10 transition-all duration-700">IDLE</span>
+              </h2>
+            </div>
+            
+            <!-- Visualizer Mode Selectors -->
+            <div class="flex items-center bg-zinc-950/80 p-1 rounded-lg border border-white/10 text-xs">
+              <button id="view-mode-combined" class="px-2.5 py-1 rounded bg-white/10 text-white font-medium transition-all shadow-[0_0_8px_rgba(255,255,255,0.15)]">Fluid Curves</button>
+              <button id="view-mode-freq" class="px-2.5 py-1 rounded text-zinc-400 hover:text-white transition-all">Spectrogram</button>
+              <button id="view-mode-dna" class="px-2.5 py-1 rounded text-zinc-400 hover:text-white transition-all">Helix Density</button>
+            </div>
+          </div>
+
+          <!-- Canvas for 2D Audio Waveform & Multi-sine Oscillations -->
+          <div class="w-full h-52 my-3 relative rounded-xl overflow-hidden bg-black/85 border border-white/10 shadow-[inset_0_0_35px_rgba(0,0,0,0.95)]">
+            <canvas id="waveform-canvas" class="w-full h-full block"></canvas>
+            
+            <!-- Realtime frequency crosshairs info -->
+            <div class="absolute top-2 left-3 font-mono text-[10px] text-zinc-400/90 space-y-0.5 pointer-events-none">
+              <div>PCM MATRIX: 48.0 kHz / 24-bit Floating Obsidian Vector</div>
+              <div>SPECTRAL ENVELOPE: <span id="hud-envelope" class="text-white">HARMONIC VORTEX</span></div>
+            </div>
+
+            <!-- Pitch Grid overlay marks -->
+            <div class="absolute right-3 bottom-2 font-mono text-[10px] text-zinc-500 pointer-events-none text-right">
+              <div>TIMBRE FLUX: <span id="hud-flux" class="text-zinc-200 font-medium">0.820x</span></div>
+              <div id="hud-freq-label" class="text-zinc-400">Carrier: 440.00 Hz</div>
+            </div>
+          </div>
+
+          <!-- Realtime Audio & Fluid Controls Bar -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2 border-t border-white/5">
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="text-zinc-400">Base Pitch</span>
+                <span id="val-pitch" class="font-mono text-zinc-200">1.00x</span>
+              </div>
+              <input type="range" id="param-pitch" min="0.5" max="2.0" step="0.01" value="1.0" class="w-full">
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="text-zinc-400">Timbre Color</span>
+                <span id="val-timbre" class="font-mono text-zinc-200">Neutral</span>
+              </div>
+              <input type="range" id="param-timbre" min="0" max="100" step="1" value="50" class="w-full">
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="text-zinc-400">Vibrato Flux</span>
+                <span id="val-vibrato" class="font-mono text-zinc-200">18%</span>
+              </div>
+              <input type="range" id="param-vibrato" min="0" max="100" step="1" value="18" class="w-full">
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="text-zinc-400">Fluid Curl Force</span>
+                <span id="val-drift" class="font-mono text-zinc-200">1.2x</span>
+              </div>
+              <input type="range" id="param-drift" min="0.1" max="3.0" step="0.1" value="1.2" class="w-full">
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Lower Workstation: Phonetic Prompt Input & Audio Transport Controls -->
+    <div class="glass-panel glass-panel-glow rounded-2xl p-5">
+      <div class="flex flex-col md:flex-row items-stretch gap-4">
+        
+        <!-- Text Prompt Area -->
+        <div class="flex-1 relative">
+          <label class="block text-xs font-medium text-zinc-400 mb-1 flex items-center justify-between">
+            <span>NEURAL PHONETIC SCRIPT</span>
+            <span class="text-[11px] font-mono text-zinc-500" id="char-count">137 / 1000 characters</span>
+          </label>
+          <div class="relative">
+            <textarea id="speech-script" rows="2" class="w-full px-4 py-2.5 bg-black/70 rounded-xl border border-white/10 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-white/40 focus:ring-1 focus:ring-white/20 transition-all font-sans resize-none" placeholder="Enter text to synthesize vocal acoustic vectors...">Dark monochrome resonance activated. Particles drift in deep fluid dynamics while harmonic frequencies calibrate biometric tone and timbre.</textarea>
+            
+            <!-- Quick Preset suggestions -->
+            <div class="absolute right-2.5 bottom-2.5 flex items-center gap-1.5">
+              <button id="preset-btn-1" class="text-[10px] px-2 py-0.5 rounded bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 border border-white/5 transition">Monochrome A</button>
+              <button id="preset-btn-2" class="text-[10px] px-2 py-0.5 rounded bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 border border-white/5 transition">Atmospheric B</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row md:flex-col justify-end gap-2 md:w-56 shrink-0">
+          <button id="synthesize-btn" class="w-full py-3 px-5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 bg-gradient-to-r from-zinc-200 via-white to-zinc-300 hover:from-white hover:to-zinc-200 text-black shadow-lg shadow-white/5 active:scale-[0.98] transition-all">
+            <i data-lucide="sparkle" class="w-4 h-4 fill-current"></i>
+            <span id="synth-btn-text">Synthesize & Play</span>
+          </button>
+
+          <div class="flex items-center gap-2">
+            <button id="preview-tone-btn" class="flex-1 py-2 px-3 rounded-lg text-xs font-medium bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 border border-white/10 flex items-center justify-center gap-1.5 transition-all">
+              <i data-lucide="volume-2" class="w-3.5 h-3.5 text-zinc-300"></i>
+              <span>Pulse Carrier</span>
+            </button>
+            
+            <button id="reset-params-btn" title="Reset parameters" class="p-2 rounded-lg bg-zinc-900/90 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-white/10 transition-all">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Live synthesis progress & interactive visual scrub bar -->
+      <div id="playback-bar-container" class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <button id="play-pause-btn" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all border border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.1)]">
+            <i data-lucide="play" class="w-4 h-4 fill-current ml-0.5" id="play-icon"></i>
+          </button>
+          <div class="text-xs font-mono text-zinc-400">
+            <span id="current-time">00:00</span> / <span id="total-time">00:04</span>
+          </div>
+        </div>
+
+        <!-- Custom monochrome progress line with illuminated marker -->
+        <div class="flex-1 relative h-2 bg-zinc-950 rounded-full cursor-pointer overflow-hidden border border-white/10 group" id="progress-container">
+          <div id="progress-fill" class="h-full bg-gradient-to-r from-zinc-500 via-zinc-200 to-white w-0 relative transition-all duration-75">
+            <div id="progress-scrub-glow" class="absolute right-0 top-0 bottom-0 w-2.5 bg-white shadow-[0_0_10px_#fff]"></div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 text-xs font-mono text-zinc-300">
+          <i data-lucide="activity" class="w-3.5 h-3.5"></i>
+          <span id="bitrate-tag">1,411 kbps PCM</span>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Footer Status Bar -->
+  <footer id="main-footer" class="hud-layer relative z-10 w-full px-6 py-2.5 border-t border-white/5 glass-panel text-[11px] text-zinc-500 flex flex-wrap items-center justify-between gap-4 font-mono">
+    <div class="flex items-center gap-4">
+      <span class="flex items-center gap-1.5 text-zinc-400">
+        <span id="footer-dot-1" class="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_6px_rgba(255,255,255,0.8)] transition-all duration-700"></span> 
+        Fluid Particles: <span class="text-zinc-200">10,800 Dynamic Nodes</span>
+      </span>
+      <span class="hidden sm:inline-block text-zinc-800">|</span>
+      <span class="flex items-center gap-1.5 text-zinc-400">
+        <span id="footer-dot-2" class="w-1.5 h-1.5 rounded-full bg-zinc-400 shadow-[0_0_6px_rgba(200,200,200,0.6)] transition-all duration-700"></span>
+        Cosmic Motes: <span class="text-zinc-300">Atmospheric Drift</span>
+      </span>
+    </div>
+    <div class="flex items-center gap-4">
+      <span class="text-zinc-400 hidden md:inline">Tip: Press <kbd class="px-1.5 py-0.5 rounded bg-zinc-900 border border-white/10 text-zinc-200">Space</kbd> or <kbd class="px-1.5 py-0.5 rounded bg-zinc-900 border border-white/10 text-zinc-200">H</kbd> to toggle Zen View</span>
+      <span class="text-zinc-800 hidden md:inline">•</span>
+      <span class="text-zinc-400">AuraVoice Dark Monochrome</span>
+    </div>
+  </footer>
+  <!-- Notification Toast -->
+  <div id="toast-alert" class="fixed bottom-6 right-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="glass-panel border-white/20 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm text-zinc-200">
+      <i data-lucide="check-circle-2" class="w-4 h-4 text-white"></i>
+      <span id="toast-message">Synthesizer calibrated.</span>
+    </div>
+  </div>
+
+  <script>
+    /* Initialize Feather/Lucide Icons */
+    lucide.createIcons();
+
+    // Application state
+    const state = {
+      isPlaying: false,
+      isMicActive: false,
+      isZenMode: false,
+      viewMode: 'combined', // 'combined', 'freq', 'dna'
+      selectedVoice: 'nova',
+      pitch: 1.0,
+      speed: 0.65, // Gentle, slower speed default
+      vibrato: 18,
+      timbreShift: 50, // 0: Warm obsidian, 50: Neutral platinum, 100: Cold silver
+      curlForce: 0.75, // Slowed down organic fluid turbulence
+      simulationMode: 0, // 0: Helix + Vortex, 1: Pure Fluid Torrent, 2: Floating Dust Cosmos
+      audioIntensity: 0.04,
+      targetIntensity: 0.04,
+      currentTime: 0,
+      totalDuration: 4.2,
+      // Color interpolation targets
+      currentColorA: new THREE.Color('#f8fafc'),
+      currentColorB: new THREE.Color('#94a3b8'),
+      targetColorA: new THREE.Color('#f8fafc'),
+      targetColorB: new THREE.Color('#94a3b8'),
+      bgTargetColor: new THREE.Color('#030407')
+    };
+
+    // Archetype definitions with comprehensive global site color theming
+    const voiceProfiles = {
+      nova: {
+        name: 'Nova Prime',
+        paletteName: 'Platinum White',
+        basePitch: 1.0,
+        baseFreq: 440,
+        formantShift: 0.0,
+        colorHex: '#f8fafc',
+        colorSecondary: '#cbd5e1',
+        chromaHue: 'platinum',
+        ambientGlow1: 'rgba(248, 250, 252, 0.07)',
+        ambientGlow2: 'rgba(203, 213, 225, 0.04)',
+        panelBorder: 'rgba(255, 255, 255, 0.12)',
+        panelBg: 'rgba(8, 10, 16, 0.78)',
+        siteGlowRgb: '248, 250, 252',
+        bodyBg: '#030407',
+        themeBtnGrad: 'from-zinc-200 via-white to-zinc-300'
+      },
+      atlas: {
+        name: 'Atlas Deep',
+        paletteName: 'Obsidian Bronze',
+        basePitch: 0.75,
+        baseFreq: 210,
+        formantShift: -4.2,
+        colorHex: '#d8b48c', // Deep smoky bronze tone
+        colorSecondary: '#785c42',
+        chromaHue: 'obsidian',
+        ambientGlow1: 'rgba(216, 180, 140, 0.08)',
+        ambientGlow2: 'rgba(120, 92, 66, 0.05)',
+        panelBorder: 'rgba(216, 180, 140, 0.16)',
+        panelBg: 'rgba(14, 11, 9, 0.82)',
+        siteGlowRgb: '216, 180, 140',
+        bodyBg: '#060403',
+        themeBtnGrad: 'from-[#d8b48c] via-[#ecd5be] to-[#b3916b]'
+      },
+      cyra: {
+        name: 'Cyra Synth',
+        paletteName: 'Lunar Ice Blue',
+        basePitch: 1.25,
+        baseFreq: 620,
+        formantShift: 5.5,
+        colorHex: '#93c5fd', // Cold lunar glacial blue tint
+        colorSecondary: '#3b82f6',
+        chromaHue: 'lunar',
+        ambientGlow1: 'rgba(147, 197, 253, 0.09)',
+        ambientGlow2: 'rgba(59, 130, 246, 0.05)',
+        panelBorder: 'rgba(147, 197, 253, 0.16)',
+        panelBg: 'rgba(7, 10, 18, 0.82)',
+        siteGlowRgb: '147, 197, 253',
+        bodyBg: '#02050b',
+        themeBtnGrad: 'from-[#93c5fd] via-[#bfdbfe] to-[#60a5fa]'
+      },
+      echo: {
+        name: 'Echo ASMR',
+        paletteName: 'Smoked Emerald Quartz',
+        basePitch: 0.9,
+        baseFreq: 330,
+        formantShift: -1.8,
+        colorHex: '#a7f3d0', // Smoked pale jade/emerald tint
+        colorSecondary: '#34d399',
+        chromaHue: 'smoked',
+        ambientGlow1: 'rgba(167, 243, 208, 0.08)',
+        ambientGlow2: 'rgba(52, 211, 153, 0.04)',
+        panelBorder: 'rgba(167, 243, 208, 0.16)',
+        panelBg: 'rgba(5, 12, 10, 0.82)',
+        siteGlowRgb: '167, 243, 208',
+        bodyBg: '#020705',
+        themeBtnGrad: 'from-[#a7f3d0] via-[#d1fae5] to-[#6ee7b7]'
+      }
+    };
+    // Apply Archetype Color System to ALL elements on the website
+    function applyArchetypeColors(profile) {
+      // 1. Set 3D target colors
+      state.targetColorA = new THREE.Color(profile.colorHex);
+      state.targetColorB = new THREE.Color(profile.colorSecondary);
+      state.bgTargetColor = new THREE.Color(profile.bodyBg);
+
+      // 2. Update CSS Root Variables for entire site
+      const root = document.documentElement;
+      root.style.setProperty('--chroma-primary', profile.colorHex);
+      root.style.setProperty('--chroma-secondary', profile.colorSecondary);
+      root.style.setProperty('--chroma-glow', `rgba(${profile.siteGlowRgb}, 0.35)`);
+      root.style.setProperty('--panel-border', profile.panelBorder);
+      root.style.setProperty('--panel-bg', profile.panelBg);
+      root.style.setProperty('--accent-tint', `rgba(${profile.siteGlowRgb}, 0.08)`);
+
+      // 3. Update Body Background
+      document.body.style.backgroundColor = profile.bodyBg;
+
+      // 4. Update Header & Badges
+      const modeBadge = document.getElementById('mode-badge');
+      if (modeBadge) {
+        modeBadge.style.color = profile.colorHex;
+        modeBadge.style.borderColor = profile.panelBorder;
+        modeBadge.style.boxShadow = `0 0 14px rgba(${profile.siteGlowRgb}, 0.15)`;
+      }
+
+      const logoIcon = document.getElementById('header-dna-icon');
+      if (logoIcon) {
+        logoIcon.style.color = profile.colorHex;
+      }
+
+      const archetypeCountBadge = document.getElementById('archetype-count-badge');
+      if (archetypeCountBadge) {
+        archetypeCountBadge.style.color = profile.colorHex;
+        archetypeCountBadge.style.borderColor = profile.panelBorder;
+      }
+
+      // 5. Update Status Indicators
+      const toneDot = document.getElementById('tone-status-dot');
+      if (toneDot) {
+        toneDot.style.backgroundColor = profile.colorHex;
+        toneDot.style.boxShadow = `0 0 10px ${profile.colorHex}`;
+      }
+
+      const statusIndicator = document.getElementById('status-indicator');
+      if (statusIndicator) {
+        statusIndicator.style.backgroundColor = profile.colorHex;
+        statusIndicator.style.boxShadow = `0 0 12px ${profile.colorHex}`;
+      }
+
+      const colorPip = document.getElementById('timbre-color-pip');
+      if (colorPip) {
+        colorPip.style.backgroundColor = profile.colorHex;
+        colorPip.style.boxShadow = `0 0 10px ${profile.colorHex}`;
+      }
+
+      const timbrePaletteName = document.getElementById('timbre-palette-name');
+      if (timbrePaletteName) {
+        timbrePaletteName.innerHTML = `<span id="timbre-color-pip" class="w-2 h-2 rounded-full transition-all duration-700" style="background-color: ${profile.colorHex}; box-shadow: 0 0 10px ${profile.colorHex};"></span> ${profile.paletteName}`;
+      }
+
+      const formantDot = document.getElementById('formant-dot');
+      if (formantDot) {
+        formantDot.style.backgroundColor = profile.colorHex;
+        formantDot.style.boxShadow = `0 0 8px ${profile.colorHex}`;
+      }
+
+      const footerDot1 = document.getElementById('footer-dot-1');
+      if (footerDot1) {
+        footerDot1.style.backgroundColor = profile.colorHex;
+        footerDot1.style.boxShadow = `0 0 8px ${profile.colorHex}`;
+      }
+
+      // 6. Atmospheric Background Nebula Orbs
+      const orb1 = document.getElementById('glow-orb-1');
+      if (orb1) orb1.style.backgroundColor = profile.ambientGlow1;
+      const orb2 = document.getElementById('glow-orb-2');
+      if (orb2) orb2.style.backgroundColor = profile.ambientGlow2;
+
+      // 7. Update Button Gradients
+      const synthBtn = document.getElementById('synthesize-btn');
+      if (synthBtn) {
+        synthBtn.className = `w-full py-3 px-5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 bg-gradient-to-r ${profile.themeBtnGrad} text-black shadow-lg shadow-black/40 hover:opacity-95 active:scale-[0.98] transition-all`;
+      }
+
+      const scrubGlow = document.getElementById('progress-scrub-glow');
+      if (scrubGlow) {
+        scrubGlow.style.backgroundColor = profile.colorHex;
+        scrubGlow.style.boxShadow = `0 0 12px ${profile.colorHex}`;
+      }
+    }
+
+    // Toggle Zen Watch Mode (Hide or Show HUD)
+    function toggleZenMode() {
+      state.isZenMode = !state.isZenMode;
+      const hudElements = document.querySelectorAll('.hud-layer');
+      const restoreContainer = document.getElementById('zen-restore-container');
+      const zenBtn = document.getElementById('zen-toggle-btn');
+
+      if (state.isZenMode) {
+        hudElements.forEach(el => el.classList.add('hud-hidden'));
+        restoreContainer.classList.remove('opacity-0', 'translate-y-[-10px]');
+        restoreContainer.classList.add('opacity-100', 'translate-y-0');
+        showToast('Zen Watch Mode active. Press [Space] or [H] to return.');
+      } else {
+        hudElements.forEach(el => el.classList.remove('hud-hidden'));
+        restoreContainer.classList.add('opacity-0', 'translate-y-[-10px]');
+        restoreContainer.classList.remove('opacity-100', 'translate-y-0');
+        showToast('HUD interface restored');
+      }
+    }
+
+    document.getElementById('zen-toggle-btn').addEventListener('click', toggleZenMode);
+    document.getElementById('zen-restore-btn').addEventListener('click', toggleZenMode);
+
+    // Keyboard Shortcuts (Space or H to toggle Zen Mode)
+    window.addEventListener('keydown', (e) => {
+      // Don't trigger if user is typing in textarea
+      if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+      if (e.code === 'Space' || e.key === 'h' || e.key === 'H') {
+        e.preventDefault();
+        toggleZenMode();
+      }
+    });
+
+    // Web Audio Synthesizer & Microphone Input Context
+    let audioCtx = null;
+    let synthNodes = [];
+    let playbackInterval = null;
+    let micStream = null;
+    let micAnalyser = null;
+    let micDataArray = null;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioCtx();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    // Toggle Live Microphone Audio Detection
+    async function toggleMicrophone() {
+      const micStatusLabel = document.getElementById('mic-status-label');
+      const micIcon = document.getElementById('mic-icon');
+
+      if (state.isMicActive) {
+        if (micStream) {
+          micStream.getTracks().forEach(track => track.stop());
+          micStream = null;
+        }
+        micAnalyser = null;
+        state.isMicActive = false;
+        micStatusLabel.textContent = 'OFF';
+        micStatusLabel.className = 'text-zinc-400 font-mono';
+        micIcon.className = 'w-3.5 h-3.5 text-zinc-400';
+        showToast('Microphone sensing deactivated');
+      } else {
+        try {
+          const ctx = getAudioContext();
+          micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+          const source = ctx.createMediaStreamSource(micStream);
+          micAnalyser = ctx.createAnalyser();
+          micAnalyser.fftSize = 512;
+          micAnalyser.smoothingTimeConstant = 0.88; // Extra smooth damping
+          source.connect(micAnalyser);
+
+          micDataArray = new Uint8Array(micAnalyser.frequencyBinCount);
+          state.isMicActive = true;
+          micStatusLabel.textContent = 'ACTIVE';
+          micStatusLabel.className = 'text-white font-mono font-bold animate-pulse';
+          micIcon.className = 'w-3.5 h-3.5 text-white';
+          showToast('Microphone live sensing: Speak softly or make sound');
+        } catch (err) {
+          console.warn('Microphone permission denied or unavailable:', err);
+          showToast('Microphone access denied or unavailable');
+        }
+      }
+    }
+    document.getElementById('toggle-mic-btn').addEventListener('click', toggleMicrophone);
+    function stopSynthesizer() {
+      synthNodes.forEach(node => {
+        try {
+          if (node.stop) node.stop();
+          if (node.disconnect) node.disconnect();
+        } catch (e) {}
+      });
+      synthNodes = [];
+      state.isPlaying = false;
+      if (!state.isMicActive) {
+        state.targetIntensity = 0.04;
+      }
+      updatePlaybackUI();
+      clearInterval(playbackInterval);
+    }
+
+    // Play synthesized voice-like harmonic formant pad
+    function playSyntheticSpeech(previewOnly = false) {
+      stopSynthesizer();
+      const ctx = getAudioContext();
+      const now = ctx.currentTime;
+      const profile = voiceProfiles[state.selectedVoice];
+      const baseFreq = profile.baseFreq * state.pitch;
+      
+      const masterGain = ctx.createGain();
+      masterGain.gain.setValueAtTime(0.01, now);
+      masterGain.gain.exponentialRampToValueAtTime(0.36, now + 0.2);
+      masterGain.connect(ctx.destination);
+      synthNodes.push(masterGain);
+
+      // Timbre tone filter (Warm to Crisp Cold)
+      const timbreFactor = state.timbreShift / 50; // 0 to 2
+      const f1 = ctx.createBiquadFilter();
+      f1.type = 'bandpass';
+      f1.frequency.setValueAtTime(profile.baseFreq * (1.2 + timbreFactor * 0.4), now);
+      f1.Q.setValueAtTime(3.8, now);
+
+      const f2 = ctx.createBiquadFilter();
+      f2.type = 'bandpass';
+      f2.frequency.setValueAtTime(profile.baseFreq * (3.0 + timbreFactor * 0.8), now);
+      f2.Q.setValueAtTime(4.5, now);
+
+      f1.connect(masterGain);
+      f2.connect(masterGain);
+
+      // Harmonic oscillators for deep acoustic tone
+      const harmonicRatios = [1, 2, 3, 4, 6];
+      harmonicRatios.forEach((ratio, idx) => {
+        const osc = ctx.createOscillator();
+        osc.type = idx % 2 === 0 ? 'sawtooth' : 'triangle';
+        osc.frequency.setValueAtTime(baseFreq * ratio, now);
+
+        // Add soft vibrato LFO
+        if (state.vibrato > 0) {
+          const lfo = ctx.createOscillator();
+          const lfoGain = ctx.createGain();
+          lfo.frequency.setValueAtTime(4.2 + (idx * 0.25), now); // Slower, gentler vibrato
+          lfoGain.gain.setValueAtTime((state.vibrato / 100) * 5 * ratio, now);
+          lfo.connect(lfoGain);
+          lfoGain.connect(osc.frequency);
+          lfo.start(now);
+          synthNodes.push(lfo, lfoGain);
+        }
+
+        const oscGain = ctx.createGain();
+        oscGain.gain.setValueAtTime((0.24 / (idx + 1)), now);
+        osc.connect(oscGain);
+        oscGain.connect(f1);
+        oscGain.connect(f2);
+        osc.start(now);
+        synthNodes.push(osc, oscGain);
+      });
+
+      // Air/whisper breath noise generator
+      const bufferSize = ctx.sampleRate * 2;
+      const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1;
+      }
+      const whiteNoise = ctx.createBufferSource();
+      whiteNoise.buffer = noiseBuffer;
+      whiteNoise.loop = true;
+
+      const noiseFilter = ctx.createBiquadFilter();
+      noiseFilter.type = 'bandpass';
+      noiseFilter.frequency.setValueAtTime(2800 + (timbreFactor * 800), now);
+      noiseFilter.Q.setValueAtTime(2.2, now);
+
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(state.selectedVoice === 'echo' ? 0.08 : 0.025, now);
+      whiteNoise.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+      noiseGain.connect(masterGain);
+      whiteNoise.start(now);
+      synthNodes.push(whiteNoise, noiseFilter, noiseGain);
+
+      state.isPlaying = true;
+      state.targetIntensity = 0.65; // Relaxed max reactivity
+      updatePlaybackUI();
+
+      const duration = previewOnly ? 1.6 : Math.max(3.8, (document.getElementById('speech-script').value.length / 24) * (1 / state.speed));
+      state.totalDuration = duration;
+      state.currentTime = 0;
+
+      masterGain.gain.setValueAtTime(0.36, now + duration - 0.5);
+      masterGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      const updateStep = 0.05;
+      playbackInterval = setInterval(() => {
+        state.currentTime += updateStep;
+        if (state.currentTime >= duration) {
+          stopSynthesizer();
+        } else {
+          updatePlaybackProgress();
+        }
+      }, updateStep * 1000);
+    }
+
+    // 3D Scene Initialization
+    const canvas3d = document.getElementById('bg-webgl-canvas');
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x030407, 0.015);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 0, 48);
+
+    const renderer = new THREE.WebGLRenderer({ canvas: canvas3d, alpha: false, antialias: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x030407, 1);
+
+    // Mouse tracking for fluid curl interaction
+    const mouse = { x: 0, y: 0, targetX: 0, targetY: 0 };
+    window.addEventListener('mousemove', (e) => {
+      mouse.targetX = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.targetY = -(e.clientY / window.innerHeight) * 2 + 1;
+    });
+
+    // Touch support for mobile viewing
+    window.addEventListener('touchmove', (e) => {
+      if (e.touches.length > 0) {
+        mouse.targetX = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
+        mouse.targetY = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
+      }
+    }, { passive: true });
+    // Procedural Monochrome Particle Dot Texture with smooth falloff
+    function createGlowDotTexture() {
+      const size = 64;
+      const cvs = document.createElement('canvas');
+      cvs.width = size;
+      cvs.height = size;
+      const ctx = cvs.getContext('2d');
+      const grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+      grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+      grad.addColorStop(0.25, 'rgba(235, 240, 248, 0.85)');
+      grad.addColorStop(0.55, 'rgba(160, 170, 185, 0.28)');
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, size, size);
+      const texture = new THREE.CanvasTexture(cvs);
+      return texture;
+    }
+
+    const dotTexture = createGlowDotTexture();
+
+    // 1. DNA Double Helix
+    const HELIX_POINTS = 1600;
+    const helixGeo = new THREE.BufferGeometry();
+    const helixPos = new Float32Array(HELIX_POINTS * 3);
+    const helixColors = new Float32Array(HELIX_POINTS * 3);
+    const helixInitCoords = [];
+
+    for (let i = 0; i < HELIX_POINTS; i++) {
+      const strand = i % 2 === 0 ? 0 : 1;
+      const t = (i / HELIX_POINTS) * 28 - 14;
+      const angle = t * 1.3 + (strand * Math.PI);
+      const radius = 6.5;
+
+      const x = Math.cos(angle) * radius;
+      const y = t * 2.8;
+      const z = Math.sin(angle) * radius;
+
+      helixPos[i * 3] = x;
+      helixPos[i * 3 + 1] = y;
+      helixPos[i * 3 + 2] = z;
+
+      helixInitCoords.push({ x, y, z, angle, radius, strand });
+
+      const lum = strand === 0 ? 0.95 : 0.65;
+      helixColors[i * 3] = lum;
+      helixColors[i * 3 + 1] = lum;
+      helixColors[i * 3 + 2] = lum;
+    }
+
+    helixGeo.setAttribute('position', new THREE.BufferAttribute(helixPos, 3));
+    helixGeo.setAttribute('color', new THREE.BufferAttribute(helixColors, 3));
+
+    const helixMaterial = new THREE.PointsMaterial({
+      size: 1.35,
+      map: dotTexture,
+      transparent: true,
+      vertexColors: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      opacity: 0.8
+    });
+
+    const helixMesh = new THREE.Points(helixGeo, helixMaterial);
+    scene.add(helixMesh);
+
+    // DNA Connecting Harmonic Bridges
+    const BRIDGES = 68;
+    const bridgeGeo = new THREE.BufferGeometry();
+    const bridgePositions = new Float32Array(BRIDGES * 2 * 3);
+    const bridgeColors = new Float32Array(BRIDGES * 2 * 3);
+
+    for (let i = 0; i < BRIDGES; i++) {
+      const t = (i / BRIDGES) * 28 - 14;
+      const angle = t * 1.3;
+      const radius = 6.5;
+
+      bridgePositions[i * 6] = Math.cos(angle) * radius;
+      bridgePositions[i * 6 + 1] = t * 2.8;
+      bridgePositions[i * 6 + 2] = Math.sin(angle) * radius;
+
+      bridgePositions[i * 6 + 3] = Math.cos(angle + Math.PI) * radius;
+      bridgePositions[i * 6 + 4] = t * 2.8;
+      bridgePositions[i * 6 + 5] = Math.sin(angle + Math.PI) * radius;
+
+      bridgeColors[i * 6] = 0.8;
+      bridgeColors[i * 6 + 1] = 0.8;
+      bridgeColors[i * 6 + 2] = 0.8;
+      bridgeColors[i * 6 + 3] = 0.45;
+      bridgeColors[i * 6 + 4] = 0.45;
+      bridgeColors[i * 6 + 5] = 0.45;
+    }
+
+    bridgeGeo.setAttribute('position', new THREE.BufferAttribute(bridgePositions, 3));
+    bridgeGeo.setAttribute('color', new THREE.BufferAttribute(bridgeColors, 3));
+
+    const bridgeMaterial = new THREE.LineBasicMaterial({
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.28,
+      blending: THREE.AdditiveBlending
+    });
+
+    const bridgeMesh = new THREE.LineSegments(bridgeGeo, bridgeMaterial);
+    scene.add(bridgeMesh);
+
+    // 2. Fluid Dynamics Swirling Curl Particles (Slowed down, hypnotic physics)
+    const FLUID_COUNT = 9000;
+    const fluidGeo = new THREE.BufferGeometry();
+    const fluidPos = new Float32Array(FLUID_COUNT * 3);
+    const fluidColors = new Float32Array(FLUID_COUNT * 3);
+    const fluidBaseTints = [];
+
+    for (let i = 0; i < FLUID_COUNT; i++) {
+      const r = Math.pow(Math.random(), 0.5) * 36;
+      const theta = Math.random() * Math.PI * 2;
+      const y = (Math.random() - 0.5) * 64;
+
+      fluidPos[i * 3] = Math.cos(theta) * r;
+      fluidPos[i * 3 + 1] = y;
+      fluidPos[i * 3 + 2] = Math.sin(theta) * r;
+
+      const lum = 0.3 + Math.random() * 0.65;
+      fluidColors[i * 3] = lum;
+      fluidColors[i * 3 + 1] = lum;
+      fluidColors[i * 3 + 2] = lum;
+      fluidBaseTints.push(lum);
+    }
+
+    fluidGeo.setAttribute('position', new THREE.BufferAttribute(fluidPos, 3));
+    fluidGeo.setAttribute('color', new THREE.BufferAttribute(fluidColors, 3));
+
+    const fluidMaterial = new THREE.PointsMaterial({
+      size: 1.15,
+      map: dotTexture,
+      transparent: true,
+      vertexColors: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      opacity: 0.65
+    });
+
+    const fluidMesh = new THREE.Points(fluidGeo, fluidMaterial);
+    scene.add(fluidMesh);
+
+    // 3. Atmospheric Floating Cosmic Dust Motes
+    const DUST_COUNT = 1800;
+    const dustGeo = new THREE.BufferGeometry();
+    const dustPos = new Float32Array(DUST_COUNT * 3);
+    const dustPhase = new Float32Array(DUST_COUNT);
+
+    for (let i = 0; i < DUST_COUNT; i++) {
+      dustPos[i * 3] = (Math.random() - 0.5) * 110;
+      dustPos[i * 3 + 1] = (Math.random() - 0.5) * 95;
+      dustPos[i * 3 + 2] = (Math.random() - 0.5) * 95;
+      dustPhase[i] = Math.random() * Math.PI * 2;
+    }
+
+    dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+
+    const dustMaterial = new THREE.PointsMaterial({
+      size: 0.75,
+      color: 0xd4d4d8,
+      transparent: true,
+      opacity: 0.3,
+      map: dotTexture,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+
+    const dustMesh = new THREE.Points(dustGeo, dustMaterial);
+    scene.add(dustMesh);
+
+    // Slowed, elegant curl noise calculation
+    function getCurlNoise(x, y, z, time, turbulence) {
+      const freq = 0.05 * turbulence;
+      const u = Math.sin(y * freq + time * 0.3) + Math.cos(z * freq + time * 0.22);
+      const v = Math.sin(z * freq + time * 0.28) + Math.cos(x * freq + time * 0.35);
+      const w = Math.sin(x * freq + time * 0.22) + Math.cos(y * freq + time * 0.28);
+      return { x: u * 0.065, y: v * 0.065, z: w * 0.065 };
+    }
+    const waveCanvas = document.getElementById('waveform-canvas');
+    const waveCtx = waveCanvas.getContext('2d');
+
+    function resizeWaveCanvas() {
+      waveCanvas.width = waveCanvas.parentElement.clientWidth * window.devicePixelRatio;
+      waveCanvas.height = waveCanvas.parentElement.clientHeight * window.devicePixelRatio;
+    }
+    window.addEventListener('resize', resizeWaveCanvas);
+    resizeWaveCanvas();
+
+    let wavePhase = 0;
+
+    function render2DWaveform() {
+      const w = waveCanvas.width;
+      const h = waveCanvas.height;
+      waveCtx.clearRect(0, 0, w, h);
+
+      // Dark minimalist precision grid lines
+      waveCtx.strokeStyle = 'rgba(255, 255, 255, 0.035)';
+      waveCtx.lineWidth = 1;
+      const gridGap = 32 * window.devicePixelRatio;
+      for (let x = 0; x < w; x += gridGap) {
+        waveCtx.beginPath();
+        waveCtx.moveTo(x, 0);
+        waveCtx.lineTo(x, h);
+        waveCtx.stroke();
+      }
+      for (let y = 0; y < h; y += gridGap) {
+        waveCtx.beginPath();
+        waveCtx.moveTo(0, y);
+        waveCtx.lineTo(w, y);
+        waveCtx.stroke();
+      }
+
+      const intensity = state.audioIntensity;
+      const midY = h / 2;
+      const activeColor = voiceProfiles[state.selectedVoice].colorHex;
+
+      if (state.viewMode === 'combined') {
+        // Multi-frequency layered fluid monochrome curves
+        const waveCount = 5;
+        for (let wave = 0; wave < waveCount; wave++) {
+          waveCtx.beginPath();
+          const alpha = 0.15 + (wave / waveCount) * 0.75;
+          waveCtx.strokeStyle = wave === waveCount - 1 ? activeColor : `rgba(255, 255, 255, ${alpha * 0.35})`;
+          waveCtx.lineWidth = (wave === waveCount - 1 ? 2.0 : 1.0) * window.devicePixelRatio;
+
+          const speed = (wave + 1) * 0.45; // Slower wave speed
+          const amp = (14 + wave * 7) * window.devicePixelRatio * (0.18 + intensity * 1.5);
+          const freqMultiplier = 0.007 + wave * 0.003;
+
+          for (let x = 0; x < w; x += 3) {
+            const envelope = Math.sin((x / w) * Math.PI);
+            const y = midY + 
+              Math.sin(x * freqMultiplier + wavePhase * speed) * amp * envelope + 
+              Math.cos(x * 0.015 - wavePhase * 0.7) * (amp * 0.3) * envelope;
+
+            if (x === 0) waveCtx.moveTo(x, y);
+            else waveCtx.lineTo(x, y);
+          }
+          waveCtx.stroke();
+        }
+
+        // Bioluminescent fluid crest nodes
+        const crestDots = 20;
+        for (let i = 0; i < crestDots; i++) {
+          const x = (w / (crestDots + 1)) * (i + 1);
+          const env = Math.sin((x / w) * Math.PI);
+          const y = midY + Math.sin(x * 0.012 + wavePhase * 2.0) * (28 * window.devicePixelRatio * (0.22 + intensity * 1.2)) * env;
+          waveCtx.fillStyle = activeColor;
+          waveCtx.shadowColor = activeColor;
+          waveCtx.shadowBlur = 8 * window.devicePixelRatio;
+          waveCtx.beginPath();
+          waveCtx.arc(x, y, 1.8 * window.devicePixelRatio, 0, Math.PI * 2);
+          waveCtx.fill();
+        }
+        waveCtx.shadowBlur = 0;
+
+      } else if (state.viewMode === 'freq') {
+        // FFT Spectrogram in clean monochrome
+        const barCount = 48;
+        const barWidth = (w / barCount) - 4 * window.devicePixelRatio;
+        for (let i = 0; i < barCount; i++) {
+          const barHeight = Math.abs(Math.sin(i * 0.28 + wavePhase * 2.4) * Math.cos(i * 0.14)) * (h * 0.65) * (0.15 + intensity);
+          const x = i * (barWidth + 4 * window.devicePixelRatio) + 2 * window.devicePixelRatio;
+          const y = h - barHeight - 10 * window.devicePixelRatio;
+
+          const grad = waveCtx.createLinearGradient(0, y, 0, h);
+          grad.addColorStop(0, activeColor);
+          grad.addColorStop(0.6, voiceProfiles[state.selectedVoice].colorSecondary);
+          grad.addColorStop(1, 'rgba(255, 255, 255, 0.02)');
+
+          waveCtx.fillStyle = grad;
+          waveCtx.fillRect(x, y, barWidth, barHeight);
+        }
+      } else {
+        // DNA Density Double-Helix cross-sections
+        const nodes = 36;
+        for (let i = 0; i < nodes; i++) {
+          const t = i / nodes;
+          const x = t * w;
+          const y1 = midY + Math.sin(t * Math.PI * 4 + wavePhase * 1.4) * (36 * window.devicePixelRatio * (0.25 + intensity));
+          const y2 = midY + Math.sin(t * Math.PI * 4 + wavePhase * 1.4 + Math.PI) * (36 * window.devicePixelRatio * (0.25 + intensity));
+
+          waveCtx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+          waveCtx.lineWidth = 1 * window.devicePixelRatio;
+          waveCtx.beginPath();
+          waveCtx.moveTo(x, y1);
+          waveCtx.lineTo(x, y2);
+          waveCtx.stroke();
+
+          waveCtx.fillStyle = activeColor;
+          waveCtx.beginPath();
+          waveCtx.arc(x, y1, 2.5 * window.devicePixelRatio, 0, Math.PI * 2);
+          waveCtx.fill();
+
+          waveCtx.fillStyle = '#71717a';
+          waveCtx.beginPath();
+          waveCtx.arc(x, y2, 2.5 * window.devicePixelRatio, 0, Math.PI * 2);
+          waveCtx.fill();
+        }
+      }
+
+      wavePhase += 0.018 * (0.6 + intensity * 1.2); // Slow, soothing cadence
+    }
+    let clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const delta = clock.getDelta();
+      const time = clock.getElapsedTime() * 0.7; // Slowed global timeline
+
+      // 1. Live Mic Detection or Synthetic Audio Intensity with extra dampening
+      if (state.isMicActive && micAnalyser && micDataArray) {
+        micAnalyser.getByteFrequencyData(micDataArray);
+        let sum = 0;
+        for (let i = 0; i < micDataArray.length; i++) {
+          sum += micDataArray[i];
+        }
+        const avg = sum / micDataArray.length;
+        const normalized = Math.min(1.0, avg / 95);
+        state.targetIntensity = Math.max(0.04, normalized * 0.85); // Gentle reactivity
+      }
+
+      // Smooth gradual intensity interpolation (soft easing, no sharp jumps)
+      state.audioIntensity += (state.targetIntensity - state.audioIntensity) * 0.045;
+
+      // Update energy readout gauge
+      const energyLabel = document.getElementById('energy-gauge-label');
+      if (energyLabel) {
+        energyLabel.textContent = `${(state.audioIntensity * 10).toFixed(2)} dB`;
+      }
+
+      // Smoothly morph color targets for archetype and tone changes
+      state.currentColorA.lerp(state.targetColorA, 0.035);
+      state.currentColorB.lerp(state.targetColorB, 0.035);
+
+      // Mouse smooth interpolation
+      mouse.x += (mouse.targetX - mouse.x) * 0.035;
+      mouse.y += (mouse.targetY - mouse.y) * 0.035;
+
+      // 2. Rotate & Dilation of DNA Double Helix (audio reactive)
+      const helixPositionsAttr = helixGeo.attributes.position;
+      const helixPositions = helixPositionsAttr.array;
+      const helixColorsAttr = helixGeo.attributes.color;
+      const helixCol = helixColorsAttr.array;
+      const helixSpeed = (0.16 + state.audioIntensity * 0.45) * state.speed;
+
+      for (let i = 0; i < HELIX_POINTS; i++) {
+        const init = helixInitCoords[i];
+        const currentAngle = init.angle + time * helixSpeed;
+        
+        // Gentle expanding radius based on acoustic energy
+        const breathRadius = init.radius + Math.sin(time * 1.8 + init.y * 0.25) * (0.3 + state.audioIntensity * 1.4);
+
+        helixPositions[i * 3] = Math.cos(currentAngle) * breathRadius;
+        helixPositions[i * 3 + 1] = init.y;
+        helixPositions[i * 3 + 2] = Math.sin(currentAngle) * breathRadius;
+
+        // Reactive vertex tinting based on timbre & archetype
+        const col = init.strand === 0 ? state.currentColorA : state.currentColorB;
+        helixCol[i * 3] = col.r * (0.7 + state.audioIntensity * 0.3);
+        helixCol[i * 3 + 1] = col.g * (0.7 + state.audioIntensity * 0.3);
+        helixCol[i * 3 + 2] = col.b * (0.7 + state.audioIntensity * 0.3);
+      }
+      helixPositionsAttr.needsUpdate = true;
+      helixColorsAttr.needsUpdate = true;
+
+      // Update DNA bridge rungs
+      const bridgePosAttr = bridgeGeo.attributes.position;
+      const bridgePos = bridgePosAttr.array;
+      for (let i = 0; i < BRIDGES; i++) {
+        const t = (i / BRIDGES) * 28 - 14;
+        const currentAngle = t * 1.3 + time * helixSpeed;
+        const r = 6.5 + Math.sin(time * 1.8 + t * 0.25) * (0.3 + state.audioIntensity * 1.4);
+
+        bridgePos[i * 6] = Math.cos(currentAngle) * r;
+        bridgePos[i * 6 + 1] = t * 2.8;
+        bridgePos[i * 6 + 2] = Math.sin(currentAngle) * r;
+
+        bridgePos[i * 6 + 3] = Math.cos(currentAngle + Math.PI) * r;
+        bridgePos[i * 6 + 4] = t * 2.8;
+        bridgePos[i * 6 + 5] = Math.sin(currentAngle + Math.PI) * r;
+      }
+      bridgePosAttr.needsUpdate = true;
+
+      // DNA Mesh orientation tracking cursor
+      helixMesh.rotation.y = time * 0.04 + mouse.x * 0.25;
+      helixMesh.rotation.z = Math.sin(time * 0.12) * 0.08 + mouse.y * 0.12;
+      bridgeMesh.rotation.y = helixMesh.rotation.y;
+      bridgeMesh.rotation.z = helixMesh.rotation.z;
+
+      // 3. Fluid Dynamics Swirling Particle Vortex (Hypnotic, deep drift)
+      const fluidPosAttr = fluidGeo.attributes.position;
+      const fPos = fluidPosAttr.array;
+      const fluidColAttr = fluidGeo.attributes.color;
+      const fCol = fluidColAttr.array;
+      const turbulence = state.curlForce;
+
+      for (let i = 0; i < FLUID_COUNT; i++) {
+        const idx = i * 3;
+        const px = fPos[idx];
+        const py = fPos[idx + 1];
+        const pz = fPos[idx + 2];
+
+        // Curl noise vector field
+        const curl = getCurlNoise(px, py, pz, time, turbulence);
+        
+        // Vortex rotational velocity modulated gently by sound
+        const distToCenter = Math.sqrt(px * px + pz * pz) + 0.001;
+        const vortexAngle = Math.atan2(pz, px) + (0.18 / distToCenter) * (0.5 + state.audioIntensity * 0.9);
+        const vortexR = distToCenter + (Math.sin(py * 0.08 + time * 0.5) * 0.025);
+
+        // Displace particles gently
+        fPos[idx] = Math.cos(vortexAngle) * vortexR + curl.x * (0.35 + state.audioIntensity * 0.6);
+        fPos[idx + 1] += curl.y * 0.45 - (0.012 + state.audioIntensity * 0.04);
+        fPos[idx + 2] = Math.sin(vortexAngle) * vortexR + curl.z * (0.35 + state.audioIntensity * 0.6);
+
+        // Fluid color tint shifts with selected archetype
+        const baseTint = fluidBaseTints[i];
+        fCol[idx] = baseTint * state.currentColorA.r * (0.8 + state.audioIntensity * 0.35);
+        fCol[idx + 1] = baseTint * state.currentColorA.g * (0.8 + state.audioIntensity * 0.35);
+        fCol[idx + 2] = baseTint * state.currentColorA.b * (0.8 + state.audioIntensity * 0.35);
+
+        // Reset boundaries for seamless looping
+        if (fPos[idx + 1] < -34) {
+          fPos[idx + 1] = 34;
+          const newR = Math.pow(Math.random(), 0.5) * 36;
+          const newAngle = Math.random() * Math.PI * 2;
+          fPos[idx] = Math.cos(newAngle) * newR;
+          fPos[idx + 2] = Math.sin(newAngle) * newR;
+        }
+      }
+      fluidPosAttr.needsUpdate = true;
+      fluidColAttr.needsUpdate = true;
+
+      // 4. Ambient Dust Motes Drift
+      const dustPosAttr = dustGeo.attributes.position;
+      const dPos = dustPosAttr.array;
+      for (let i = 0; i < DUST_COUNT; i++) {
+        const idx = i * 3;
+        const phase = dustPhase[i];
+        
+        dPos[idx] += Math.sin(time * 0.2 + phase) * 0.012;
+        dPos[idx + 1] += Math.cos(time * 0.18 + phase) * 0.018;
+        dPos[idx + 2] += Math.sin(time * 0.12 + phase * 2) * 0.012;
+
+        if (dPos[idx + 1] > 45) dPos[idx + 1] = -45;
+        if (dPos[idx + 1] < -45) dPos[idx + 1] = 45;
+      }
+      dustPosAttr.needsUpdate = true;
+
+      // Camera subtle tracking
+      camera.position.x = Math.sin(time * 0.04) * 2 + mouse.x * 3.5;
+      camera.position.y = Math.cos(time * 0.03) * 1.8 + mouse.y * 2.8;
+      camera.lookAt(0, 0, 0);
+
+      renderer.render(scene, camera);
+      render2DWaveform();
+    }
+
+    // Window resize handler
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+    // Voice card archetype selection with dynamic color styling
+    const voiceCards = document.querySelectorAll('.voice-card');
+    voiceCards.forEach(card => {
+      card.addEventListener('click', () => {
+        voiceCards.forEach(c => {
+          c.classList.remove('active', 'border-white/40', 'bg-white/[0.04]', 'shadow-[0_0_20px_rgba(255,255,255,0.06)]');
+          c.classList.add('border-white/5', 'bg-zinc-950/40');
+          c.style.borderColor = 'rgba(255, 255, 255, 0.05)';
+          const p = c.querySelector('.active-dot');
+          if (p) p.remove();
+        });
+
+        card.classList.add('active', 'bg-white/[0.04]');
+        card.classList.remove('border-white/5', 'bg-zinc-950/40');
+
+        const voiceKey = card.getAttribute('data-voice');
+        state.selectedVoice = voiceKey;
+        const profile = voiceProfiles[voiceKey];
+
+        // Apply theme border
+        card.style.borderColor = profile.colorHex;
+        card.style.boxShadow = `0 0 25px rgba(${profile.siteGlowRgb}, 0.12)`;
+
+        const pulseDot = document.createElement('div');
+        pulseDot.className = 'active-dot w-2 h-2 rounded-full ml-auto mt-1 animate-pulse';
+        pulseDot.style.backgroundColor = profile.colorHex;
+        pulseDot.style.boxShadow = `0 0 8px ${profile.colorHex}`;
+        card.querySelector('.text-right').appendChild(pulseDot);
+
+        // Apply dynamic tonal color shifts to the entire site
+        applyArchetypeColors(profile);
+
+        document.getElementById('hud-freq-label').textContent = `Carrier: ${(profile.baseFreq * state.pitch).toFixed(2)} Hz`;
+        document.getElementById('stat-formant').textContent = `${profile.formantShift > 0 ? '+' : ''}${profile.formantShift.toFixed(1)} st`;
+
+        showToast(`Archetype transformed to ${profile.name} (${profile.paletteName})`);
+
+        if (state.isPlaying) {
+          playSyntheticSpeech();
+        }
+      });
+    });
+
+    // Sliders
+    const pitchSlider = document.getElementById('param-pitch');
+    const timbreSlider = document.getElementById('param-timbre');
+    const vibratoSlider = document.getElementById('param-vibrato');
+    const driftSlider = document.getElementById('param-drift');
+
+    pitchSlider.addEventListener('input', (e) => {
+      state.pitch = parseFloat(e.target.value);
+      document.getElementById('val-pitch').textContent = `${state.pitch.toFixed(2)}x`;
+      const currentBase = voiceProfiles[state.selectedVoice].baseFreq;
+      document.getElementById('hud-freq-label').textContent = `Carrier: ${(currentBase * state.pitch).toFixed(2)} Hz`;
+    });
+
+    timbreSlider.addEventListener('input', (e) => {
+      state.timbreShift = parseInt(e.target.value);
+      const val = state.timbreShift;
+      const label = val < 35 ? 'Obsidian Warm' : val > 65 ? 'Cold Platinum' : 'Neutral Bone';
+      document.getElementById('val-timbre').textContent = label;
+
+      // Shift tone color warmth/coolness based on timbre slider
+      const warmth = (val - 50) / 50; // -1 to +1
+      if (warmth > 0) {
+        state.targetColorA.setRGB(1.0, 1.0 - warmth * 0.08, 1.0 - warmth * 0.05);
+      } else {
+        state.targetColorA.setRGB(0.9 + warmth * 0.1, 0.9 + warmth * 0.1, 0.95);
+      }
+    });
+
+    vibratoSlider.addEventListener('input', (e) => {
+      state.vibrato = parseInt(e.target.value);
+      document.getElementById('val-vibrato').textContent = `${state.vibrato}%`;
+    });
+
+    driftSlider.addEventListener('input', (e) => {
+      state.curlForce = parseFloat(e.target.value);
+      document.getElementById('val-drift').textContent = `${state.curlForce.toFixed(1)}x`;
+      document.getElementById('hud-flux').textContent = `${(state.curlForce * 0.68).toFixed(3)}x`;
+    });
+
+    // Reset button
+    document.getElementById('reset-params-btn').addEventListener('click', () => {
+      state.pitch = 1.0;
+      state.timbreShift = 50;
+      state.vibrato = 18;
+      state.curlForce = 0.75;
+
+      pitchSlider.value = 1.0;
+      timbreSlider.value = 50;
+      vibratoSlider.value = 18;
+      driftSlider.value = 0.75;
+
+      document.getElementById('val-pitch').textContent = '1.00x';
+      document.getElementById('val-timbre').textContent = 'Neutral';
+      document.getElementById('val-vibrato').textContent = '18%';
+      document.getElementById('val-drift').textContent = '0.8x';
+      document.getElementById('hud-flux').textContent = '0.510x';
+
+      applyArchetypeColors(voiceProfiles[state.selectedVoice]);
+      showToast('Acoustic matrix reset to calibrated defaults');
+    });
+
+    // View mode switch buttons
+    const modeButtons = [
+      { id: 'view-mode-combined', mode: 'combined' },
+      { id: 'view-mode-freq', mode: 'freq' },
+      { id: 'view-mode-dna', mode: 'dna' }
+    ];
+
+    modeButtons.forEach(btnObj => {
+      const btn = document.getElementById(btnObj.id);
+      btn.addEventListener('click', () => {
+        modeButtons.forEach(b => {
+          const el = document.getElementById(b.id);
+          el.className = 'px-2.5 py-1 rounded text-zinc-400 hover:text-white transition-all';
+        });
+        btn.className = 'px-2.5 py-1 rounded bg-white/10 text-white font-medium transition-all shadow-[0_0_8px_rgba(255,255,255,0.15)]';
+        state.viewMode = btnObj.mode;
+        document.getElementById('hud-envelope').textContent = btnObj.mode === 'combined' ? 'HARMONIC VORTEX' : btnObj.mode === 'freq' ? 'FFT SPECTRAL' : 'HELIX LATTICE';
+      });
+    });
+
+    // Background 3D Simulation toggle mode
+    const toggleHelixBtn = document.getElementById('toggle-helix-btn');
+    const helixModeLabel = document.getElementById('helix-mode-label');
+    const simModes = ['Helix + Vortex', 'Fluid Torrent', 'Dark Dust Void'];
+
+    toggleHelixBtn.addEventListener('click', () => {
+      state.simulationMode = (state.simulationMode + 1) % 3;
+      helixModeLabel.textContent = simModes[state.simulationMode];
+
+      if (state.simulationMode === 0) {
+        helixMesh.visible = true;
+        bridgeMesh.visible = true;
+        fluidMesh.visible = true;
+        dustMesh.visible = true;
+      } else if (state.simulationMode === 1) {
+        helixMesh.visible = false;
+        bridgeMesh.visible = false;
+        fluidMesh.visible = true;
+        dustMesh.visible = true;
+      } else {
+        helixMesh.visible = false;
+        bridgeMesh.visible = false;
+        fluidMesh.visible = false;
+        dustMesh.visible = true;
+      }
+      showToast(`Simulation switched to ${simModes[state.simulationMode]}`);
+    });
+
+    // Preset Script buttons
+    const preset1 = document.getElementById('preset-btn-1');
+    const preset2 = document.getElementById('preset-btn-2');
+    const scriptArea = document.getElementById('speech-script');
+    const charCount = document.getElementById('char-count');
+
+    function updateCharCount() {
+      charCount.textContent = `${scriptArea.value.length} / 1000 characters`;
+    }
+
+    preset1.addEventListener('click', () => {
+      scriptArea.value = "Dark monochrome resonance activated. Particles drift in deep fluid dynamics while harmonic frequencies calibrate biometric tone and timbre.";
+      updateCharCount();
+    });
+
+    preset2.addEventListener('click', () => {
+      scriptArea.value = "Acoustic vectors align in obsidian stillness. Voice archetype harmonics modulate fine dust motes and double helix geometry.";
+      updateCharCount();
+    });
+
+    scriptArea.addEventListener('input', updateCharCount);
+
+    const synthBtn = document.getElementById('synthesize-btn');
+    const playPauseBtn = document.getElementById('play-pause-btn');
+    const previewBtn = document.getElementById('preview-tone-btn');
+
+    synthBtn.addEventListener('click', () => {
+      if (state.isPlaying) {
+        stopSynthesizer();
+        showToast('Acoustic stream halted');
+      } else {
+        playSyntheticSpeech(false);
+        showToast('Synthesizing speech & generating fluid waveforms');
+      }
+    });
+
+    previewBtn.addEventListener('click', () => {
+      playSyntheticSpeech(true);
+      showToast('Carrier pulse preview initiated');
+    });
+
+    playPauseBtn.addEventListener('click', () => {
+      if (state.isPlaying) {
+        stopSynthesizer();
+      } else {
+        playSyntheticSpeech(false);
+      }
+    });
+
+    function updatePlaybackUI() {
+      const playIcon = document.getElementById('play-icon');
+      const recordingPulse = document.getElementById('recording-pulse');
+      const badge = document.getElementById('synthesis-badge');
+      const synthText = document.getElementById('synth-btn-text');
+      const toneDot = document.getElementById('tone-status-dot');
+      const toneText = document.getElementById('tone-status-text');
+      const profile = voiceProfiles[state.selectedVoice];
+
+      if (state.isPlaying) {
+        playIcon.setAttribute('data-lucide', 'square');
+        recordingPulse.classList.remove('hidden');
+        badge.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-white/20 text-white border border-white/40 shadow-[0_0_12px_rgba(255,255,255,0.4)] animate-pulse';
+        badge.textContent = 'STREAMING AUDIO';
+        synthText.textContent = 'Halt Synthesis';
+        toneDot.className = 'inline-block w-1.5 h-1.5 rounded-full animate-ping';
+        toneDot.style.backgroundColor = profile.colorHex;
+        toneDot.style.boxShadow = `0 0 10px ${profile.colorHex}`;
+        toneText.textContent = 'ACTIVE RESONANCE';
+      } else {
+        playIcon.setAttribute('data-lucide', 'play');
+        recordingPulse.classList.add('hidden');
+        badge.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-950 text-zinc-400 border border-white/10';
+        badge.textContent = 'IDLE';
+        synthText.textContent = 'Synthesize & Play';
+        toneDot.className = 'inline-block w-1.5 h-1.5 rounded-full';
+        toneDot.style.backgroundColor = profile.colorHex;
+        toneDot.style.boxShadow = `0 0 8px ${profile.colorHex}`;
+        toneText.textContent = 'IDLE HARMONICS';
+      }
+      lucide.createIcons();
+    }
+
+    function updatePlaybackProgress() {
+      const pct = Math.min(100, (state.currentTime / state.totalDuration) * 100);
+      document.getElementById('progress-fill').style.width = `${pct}%`;
+      
+      const currentSec = Math.floor(state.currentTime);
+      const totalSec = Math.floor(state.totalDuration);
+      document.getElementById('current-time').textContent = `00:${currentSec < 10 ? '0' + currentSec : currentSec}`;
+      document.getElementById('total-time').textContent = `00:${totalSec < 10 ? '0' + totalSec : totalSec}`;
+    }
+
+    // Scrub bar interaction
+    const progressContainer = document.getElementById('progress-container');
+    progressContainer.addEventListener('click', (e) => {
+      const rect = progressContainer.getBoundingClientRect();
+      const clickPos = (e.clientX - rect.left) / rect.width;
+      state.currentTime = clickPos * state.totalDuration;
+      updatePlaybackProgress();
+    });
+
+    // Toast Alert Notification
+    let toastTimeout = null;
+    function showToast(msg) {
+      const toast = document.getElementById('toast-alert');
+      const text = document.getElementById('toast-message');
+      text.textContent = msg;
+      toast.classList.remove('opacity-0', 'translate-y-24', 'pointer-events-none');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-24', 'pointer-events-none');
+      }, 3000);
+    }
+
+    window.onload = function() {
+      // Set initial archetype color scheme across entire website
+      applyArchetypeColors(voiceProfiles[state.selectedVoice]);
+      animate();
+      showToast('Monochrome acoustic matrix active. Press [Space] for Zen View.');
+    };
+  </script>
+</body>
+</html>

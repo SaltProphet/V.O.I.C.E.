@@ -41,5 +41,7 @@ try {
   Check-Exit 'Frontend build'
   & $python scripts/create_onboarding.py
   Check-Exit 'Packaged audio installation'
+  & $python scripts/create_archetypes.py
+  Check-Exit 'Packaged character voice installation'
   Write-Host 'Setup complete. Start Launch-Voice-Studio.cmd and open http://127.0.0.1:8765'
 } finally { Pop-Location }

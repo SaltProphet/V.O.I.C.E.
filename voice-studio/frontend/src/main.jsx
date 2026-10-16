@@ -5,10 +5,14 @@ import Regions from 'wavesurfer.js/dist/plugins/regions.esm.js';
 import './style.css';
 import './studio-theme.css';
 import AudioWelcome from './AudioWelcome.jsx';
+import AuraStudio from './AuraStudio.jsx';
+import './immersive-shell.css';
 const id=()=>crypto.randomUUID();
 const empty=()=>({name:'Untitled session',tracks:[{id:id(),name:'Voice 1',volume:1,mute:false},{id:id(),name:'Voice 2',volume:1,mute:false}],clips:[]});
 async function api(path,body){const r=await fetch('/api'+path,body instanceof FormData?{method:'POST',body}:body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{});if(!r.ok){let e;try{e=await r.json()}catch{e={detail:r.statusText}}throw Error(typeof e.detail==='string'?e.detail:JSON.stringify(e.detail))}return r.json()}
 function App(){
+ const [workspace,setWorkspace]=useState('immersive'),[zen,setZen]=useState(false);
+ const openTools=(id,tab='edit')=>{if(id)setSelected(id);setWorkspace(tab);setZen(false);requestAnimationFrame(()=>document.querySelector(tab==='timeline'?'.timeline':tab==='welcome'?'.audio-welcome':'.workspace')?.scrollIntoView({behavior:'smooth',block:'start'}))};
  const [assets,setAssets]=useState([]),[selected,setSelected]=useState(null),[profiles,setProfiles]=useState([]),[sessions,setSessions]=useState([]),[profile,setProfile]=useState(''),[session,setSession]=useState(empty),[error,setError]=useState(''),[status,setStatus]=useState('Ready'),[busy,setBusy]=useState(false),[recording,setRecording]=useState(false),[transcript,setTranscript]=useState(''),[profileName,setProfileName]=useState('My voice'),[text,setText]=useState(''),[language,setLanguage]=useState('English'),[health,setHealth]=useState(null),[before,setBefore]=useState(null),[result,setResult]=useState(null),[exported,setExported]=useState(null),[trim,setTrim]=useState({start:0,end:0}),[ops,setOps]=useState({denoise:false,normalize:false,highpass:false,strength:.7,fade_in:0,fade_out:0}),[playing,setPlaying]=useState(false),[track,setTrack]=useState(''),[job,setJob]=useState(null);
  const waveEl=useRef(),wave=useRef(),region=useRef(),rec=useRef(),stream=useRef(),chunks=useRef([]),mixContext=useRef(),sources=useRef([]),drag=useRef(null),timer=useRef();
  const chosen=assets.find(a=>a.id===selected);
@@ -60,7 +64,7 @@ function App(){
  async function playMix(){stopMix();setError('');try{const ctx=new AudioContext();mixContext.current=ctx;await ctx.resume();const decoded=await Promise.all(session.clips.map(async c=>{const response=await fetch('/api/assets/'+c.asset+'/audio');if(!response.ok)throw Error('Audio missing');return [c,await ctx.decodeAudioData(await response.arrayBuffer())]}));const start=ctx.currentTime+.1;let last=0;decoded.forEach(([c,buffer])=>{const t=session.tracks.find(t=>t.id===c.track);if(t.mute)return;const src=ctx.createBufferSource(),gain=ctx.createGain();src.buffer=buffer;gain.gain.value=t.volume;src.connect(gain).connect(ctx.destination);src.start(start+c.at,c.in,c.out-c.in);sources.current.push(src);last=Math.max(last,c.at+c.out-c.in)});setPlaying(true);setTimeout(()=>{if(mixContext.current===ctx)stopMix()},(last+.2)*1000)}catch(e){stopMix();setError(e.message)}}
  const duration=Math.max(15,...session.clips.map(c=>c.at+c.out-c.in+2));const scale=55;
  const chosenProfile=profiles.find(p=>p.id===profile);
- return <main>
+ return <><nav className={"studio-switcher "+(zen?"zen-hidden":"")} aria-label="Studio workspace"><span>VOICE STUDIO <small>ACOUSTIC PLAYGROUND</small></span><div>{[["immersive","Voice playground"],["edit","Recording & edit"],["timeline","Timeline & export"],["welcome","Spoken welcome"]].map(([id,label])=><button key={id} className={workspace===id?"active":""} onClick={()=>id==="immersive"?setWorkspace(id):openTools(null,id)}>{label}</button>)}</div></nav><AuraStudio assets={assets} profiles={profiles} active={workspace==="immersive"} onZen={setZen} onEditor={openTools} onAsset={a=>{refresh();setSelected(a.id);setResult(a)}}/><div className="studio-tools" hidden={workspace==="immersive"}><main>
  <header><div className="brand"><span className="logo">≋</span><div><h1>Voice Studio</h1><p>Your voice. Your workspace.</p></div></div><div className="local"><i/> {health?.demo?'PRIVATE DEMO':'LOCAL STUDIO'} <span>Qwen3-TTS · 1.7B Base</span></div></header>
  <div className="status" role="status"><span>{status}</span><span>{health?.inference?.status==='ready'?'Inference available':'Inference unavailable'} {job&&' · '+job.status}</span></div>
  {health?.demo&&<div className="demo-notice">Shared demo · Everyone invited can see files saved here. Use sample audio or recordings you are comfortable sharing.</div>}
@@ -76,6 +80,6 @@ function App(){
  {exported&&<div className="export"><audio controls src={exported.url}/><a href={exported.url} download>Download mixed WAV ↗</a><span>{exported.duration.toFixed(2)}s · 48 kHz stereo{exported.gain<1?' · Gain reduced to prevent clipping':''}</span></div>}
  <div className="session-bar"><label>Session name<input aria-label="Session name" value={session.name} onChange={e=>setSession({...session,name:e.target.value})}/></label><button disabled={busy} onClick={()=>work(async()=>{const s=await api('/sessions',session);setSession(s);await refresh();setStatus('Session saved')})}>Save session</button><select aria-label="Open saved session" defaultValue="" onChange={e=>{const val=e.target.value;if(val)work(async()=>{stopMix();setSession(await api('/sessions/'+val));setExported(null);setTrack('');setStatus('Session reopened')})}}><option value="">Open saved session…</option>{sessions.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select><button onClick={()=>{stopMix();setSession(empty());setTrack('');setExported(null)}}>New session</button></div></section>
  <footer>Voice references, recordings, sessions, and exports stay in this project. Test files use a separate workspace.</footer>
- </main>
+ </main></div></>
 }
 createRoot(document.getElementById('root')).render(<App/>);

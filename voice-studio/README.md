@@ -85,3 +85,13 @@ Machine-specific installation reports, if present locally, are excluded from the
 For an email-protected remote demo, see `SHARING.md` and use `Start-Demo-Sharing.cmd` / `Stop-Demo-Sharing.cmd`.
 
 Narration source text and generated audio are under `content/onboarding/`; the synthetic narrator reference and design description are under `data/onboarding-narrator/`. `scripts/create_narrator.py` creates that synthetic speaker; `scripts/create_onboarding.py` generates and installs the audio in the personal and shared demo workspaces. Existing user recordings and profiles are preserved. The walkthrough is assembled from short narrated sections so it can also be edited as a saved session.
+
+## Immersive voice playground
+
+The app now opens in the supplied HTML's animated voice playground. Select Nova Prime, Atlas Deep, Cyra Synth, or Echo ASMR, or choose one of your saved voices. Preview voice plays the reference. Synthesize & Play generates real speech and plays the result.
+
+Pitch, Timbre Color, and Vibrato Flux shape the current clip when you press Apply & preview FX. Each processed result is a separate WAV. Download WAV downloads the current result; Open in editor transfers it to the recording editor. The top workspace tabs open recording/editing, timeline/export, and the spoken welcome. The original carrier-tone instrument remains available through Pulse Carrier.
+
+Mic enables reactive microphone sensing; recording is under Recording & edit. Helix/vortex/dust and visualizer modes retain the original playful interface. Zen hides the interface; H, Space, or Escape restores it. Visual quality offers Full, Light, and Still modes. All graphics, fonts, and icons load locally.
+
+See `IMMERSIVE-STUDIO.md` for implementation and verification details.

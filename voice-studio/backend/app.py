@@ -20,6 +20,7 @@ pool=ThreadPoolExecutor(max_workers=1); jobs={}; guard=threading.Lock()
 async def local_origin(request:Request,call_next):
     origin=request.headers.get('origin')
     allowed=['http://127.0.0.1:8765','http://localhost:8765','http://127.0.0.1:5178','http://localhost:5178']
+    allowed.append(str(request.base_url).rstrip('/'))
     if os.environ.get('VOICE_STUDIO_DEMO')=='1':
         allowed += ['http://127.0.0.1:8767','http://localhost:8767']
         config=ROOT/'logs/sharing.json'
@@ -88,6 +89,9 @@ class Edit(BaseModel):
     highpass:bool=False; denoise:bool=False; normalize:bool=False
     strength:float=Field(default=.7,ge=0,le=1)
     fade_in:float=Field(default=0,ge=0,le=60); fade_out:float=Field(default=0,ge=0,le=60)
+    pitch:float=Field(default=0,ge=-12,le=12)
+    timbre:float=Field(default=0,ge=-1,le=1)
+    vibrato:float=Field(default=0,ge=0,le=1)
 @app.post('/api/assets/{id}/process')
 def cleanup(id:str,ops:Edit):
     a=load('audio',id); x,sr=process(assetpath(id),ops.model_dump()); p=DATA/'audio'/(uid()+'.wav'); sf.write(p,x,sr,subtype='PCM_16')
