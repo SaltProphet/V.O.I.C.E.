@@ -1,8 +1,14 @@
 # Voice Studio
 
-A personal, locally hosted voice workspace for Windows: recording, voice references, Qwen3-TTS voice cloning, non-destructive cleanup, a basic multitrack timeline, and WAV export. Includes a synthetic spoken welcome and generated demo audio.
+A personal, locally hosted voice workspace for Windows: recording, voice references, Qwen3-TTS voice cloning, non-destructive cleanup, a basic multitrack timeline, and WAV export. Includes the AuraVoice immersive interface, local dialogue sequencing, and generated demo audio.
 
 The application is under [`voice-studio/`](voice-studio/). See its [user guide](voice-studio/README.md) and [private demo sharing guide](voice-studio/SHARING.md).
+
+## Current interface
+
+The default **Immersive studio** view uses the supplied AuraVoice design: a reactive 3D helix, particles, voice palettes, dialogue sequence blocks, local voice references, playback, and WAV downloads. **Recorder & editor** retains recording, waveform editing, cleanup, and multitrack tools. **Classic view** retains the simplified interface.
+
+See [AuraVoice integration and verification](voice-studio/AURAVOICE.md) for behavior and known limits.
 
 ## Windows setup
 

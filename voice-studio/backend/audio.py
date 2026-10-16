@@ -16,6 +16,17 @@ def process(path,ops):
     start=float(ops.get('start',0)); end=float(ops.get('end',len(x)/sr))
     if not 0<=start<end<=len(x)/sr+0.001: raise ValueError('Trim must fall inside the recording.')
     x=x[int(start*sr):int(end*sr)].copy()
+    if any(ops.get(key,0) for key in ['pitch','timbre','vibrato']):
+        from pedalboard import Pedalboard,HighShelfFilter,LowShelfFilter,Chorus
+        effects=[]
+        if ops.get('pitch'):
+            import librosa
+            x=librosa.effects.pitch_shift(x.T,sr=sr,n_steps=float(ops['pitch'])).T
+        if ops.get('timbre'):
+            color=float(ops['timbre'])
+            effects.extend([LowShelfFilter(cutoff_frequency_hz=350,gain_db=-color*6),HighShelfFilter(cutoff_frequency_hz=2500,gain_db=color*8)])
+        if ops.get('vibrato'):effects.append(Chorus(rate_hz=5,depth=float(ops['vibrato'])*.6,centre_delay_ms=7,feedback=0,mix=1))
+        if effects:x=Pedalboard(effects)(x.T.copy(),sr).T
     if ops.get('highpass'):
         x=signal.sosfilt(signal.butter(4,80,fs=sr,btype='highpass',output='sos'),x,axis=0)
     if ops.get('denoise'):
