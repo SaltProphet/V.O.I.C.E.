@@ -3,6 +3,7 @@ import {createRoot} from 'react-dom/client';
 import WaveSurfer from 'wavesurfer.js';
 import Regions from 'wavesurfer.js/dist/plugins/regions.esm.js';
 import './style.css';
+import './studio-theme.css';
 import AudioWelcome from './AudioWelcome.jsx';
 const id=()=>crypto.randomUUID();
 const empty=()=>({name:'Untitled session',tracks:[{id:id(),name:'Voice 1',volume:1,mute:false},{id:id(),name:'Voice 2',volume:1,mute:false}],clips:[]});
