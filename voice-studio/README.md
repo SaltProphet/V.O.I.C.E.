@@ -86,12 +86,15 @@ For an email-protected remote demo, see `SHARING.md` and use `Start-Demo-Sharing
 
 Narration source text and generated audio are under `content/onboarding/`; the synthetic narrator reference and design description are under `data/onboarding-narrator/`. `scripts/create_narrator.py` creates that synthetic speaker; `scripts/create_onboarding.py` generates and installs the audio in the personal and shared demo workspaces. Existing user recordings and profiles are preserved. The walkthrough is assembled from short narrated sections so it can also be edited as a saved session.
 
-## Unified studio workspace
+## Focused workspace
 
-The app opens in one workspace inspired by the Timbre layout: compact reactive visualizer, saved voices and dialogue side by side, a selected-take player, recording/import and reusable references, an expandable waveform editor, and a collapsible multitrack timeline. The spoken welcome and workspace tabs have been removed; existing narration files remain in the library.
+Voice Studio opens in **Generate speech**. Persistent navigation provides **Record & edit** and **Arrange & export** with a clip count. **Recordings** opens a searchable drawer. Selecting audio makes the shared Play/Pause, Edit, Add to arrangement, and Download WAV actions available.
 
-Select a character or saved voice, write dialogue, and press Generate speech. Load voice reference selects its recording for playback. Record microphone or Import audio preserves the original input and opens the editor. Selecting a library take or Edit selected take opens waveform trimming, cleanup, fades, pitch, color, and vibrato. Apply trim & cleanup creates a separate WAV. Add to timeline opens the timeline; save/reopen sessions or export a stereo mixed WAV there.
+- **Generate speech:** choose Your saved voices or Sample voices, enter Text to speak, and generate. Expand Dialogue sequence for multiple speakers. Draft blocks use the existing `auravoice-dialogue` local-storage key. Generation continues while switching views. Stop sequence waits for the active server job and skips later blocks; completed takes remain saved.
+- **Record & edit:** record a microphone or import WAV/MP3/FLAC; select audio to trim, normalize, denoise, filter, or fade. Advanced effects contains pitch, timbre, and vibrato. Apply processing to create a new version. Save as a voice reference requires an exact transcript of the chosen recording.
+- **Arrange & export:** adding audio appends it after the final clip on the destination track and opens the arrangement. Drag clips or use fields for intentional overlap. Save/reopen arrangements; export a mixed 48 kHz stereo WAV. Unsaved dialogue and form values are not part of the saved arrangement format.
+- **Visual mode:** optional Helix, Fluid, and Dust appearances with Zen view. Motion starts Off and schedules no recurring animation loop. Motion On runs only while foregrounded. Leaving Visual mode disposes its iframe, WebGL resources, and audio context. The standard workspace has no animation canvas or hidden visual iframe.
 
-Zen view hides the workspace around the visualizer; Escape or Show interface restores it. Fluid curves, Frequency, and Helix respond to the selected-take player. Motion off removes ambient movement. The older immersive HTML and adapter remain in source for reference but are no longer mounted. Current cloning uses saved audio and exact transcripts; free-form VoiceDesign prompting and named cloud-provider voices are not part of this interface.
+Recording and generation are mutually exclusive. A global Stop recording control stays available during navigation. If microphone permission is left unanswered, Cancel microphone request restores the app; a subsequently granted cancelled stream is closed.
 
-See `UNIFIED-STUDIO.md` for the checkpoint and verification record. `IMMERSIVE-STUDIO.md` documents the previous layout.
+No backend routes, model requirements, or saved profile/session formats changed. See `FOCUSED-WORKSPACE.md` for verification and checkpoint details. Older layout reports describe historical versions.
