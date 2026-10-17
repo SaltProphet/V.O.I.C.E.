@@ -1,8 +1,20 @@
 # Voice Studio
 
+**Over-engineered anti-AI-slop generation. Probably.**
+
 A personal, locally hosted voice workspace for Windows: recording, voice references, Qwen3-TTS voice cloning, non-destructive cleanup, a basic multitrack timeline, and WAV export. Includes the AuraVoice immersive interface, local dialogue sequencing, and generated demo audio.
 
 The application is under [`voice-studio/`](voice-studio/). See its [user guide](voice-studio/README.md) and [private demo sharing guide](voice-studio/SHARING.md).
+
+## Watch Voice Studio explain itself
+
+[![Watch the self-narrated Voice Studio demo](demos/voice-studio-probably/poster.jpg)](demos/voice-studio-probably/Voice-Studio-Probably.mp4)
+
+The app makes its own voiceover, then narrates its own creation. Nova and Atlas take turns across nine dialogue blocks while the demo shows speech generation, transcription, cleanup, description-based voice design, multitrack arrangement, and WAV export. No explanatory captions; the soundtrack is the mix exported by Voice Studio.
+
+**[Watch the demo](demos/voice-studio-probably/Voice-Studio-Probably.mp4)** · [Voiceover and dialogue script](demos/voice-studio-probably/)
+
+This is a preview of the local development build, not a numbered release. Its transcription and voice-design controls are ahead of the published source. Generation waits are fast-forwarded; all voices and recordings in the demo are synthetic samples. The dialogue includes profanity.
 
 ## Current interface
 
