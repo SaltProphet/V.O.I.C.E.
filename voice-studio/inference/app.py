@@ -44,13 +44,24 @@ def generate(r:Request):
         from qwen_tts import Qwen3TTSModel
         torch.set_num_threads(4)
         load_model('Base')
-        t=time.time(); torch.cuda.reset_peak_memory_stats()
+        t=time.time()
+        # On some Windows/CUDA driver combinations this bookkeeping call raises
+        # OSError(22) even though inference itself is available. Treat memory
+        # telemetry as optional so it cannot fail a generation.
+        try:
+            torch.cuda.reset_peak_memory_stats()
+        except OSError:
+            pass
         wavs,sr=model.generate_voice_clone(text=r.text,language=r.language,ref_audio=str(reference),ref_text=r.transcript,max_new_tokens=2048)
         import numpy as np
         if len(wavs[0]) == 0 or not np.isfinite(wavs[0]).all():
             raise RuntimeError('The model returned empty or invalid audio.')
         sf.write(output,wavs[0],sr,subtype='PCM_16')
-        return {'seconds':len(wavs[0])/sr,'elapsed':time.time()-t,'peak_gpu_gib':torch.cuda.max_memory_allocated()/2**30}
+        try:
+            peak_gpu_gib=torch.cuda.max_memory_allocated()/2**30
+        except OSError:
+            peak_gpu_gib=None
+        return {'seconds':len(wavs[0])/sr,'elapsed':time.time()-t,'peak_gpu_gib':peak_gpu_gib}
     except Exception as e:
         raise HTTPException(500,f'{type(e).__name__}: {e}')
     finally: lock.release()
