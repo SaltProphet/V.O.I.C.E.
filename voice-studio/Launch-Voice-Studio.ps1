@@ -1,6 +1,16 @@
 param([switch]$TestWorkspace,[switch]$NoBrowser)
 $ErrorActionPreference='Stop'
 $root=$PSScriptRoot
+# Refresh FFmpeg discovery when a launcher inherits an older Windows PATH.
+if (!(Get-Command ffmpeg -ErrorAction SilentlyContinue) -or !(Get-Command ffprobe -ErrorAction SilentlyContinue)) {
+  $videoToolsRoot=Join-Path $env:LOCALAPPDATA 'Microsoft\WinGet\Packages'
+  if (Test-Path $videoToolsRoot) {
+    $videoFfmpeg=Get-ChildItem $videoToolsRoot -Directory -Filter '*FFmpeg*' | ForEach-Object {
+      Get-ChildItem $_.FullName -Filter ffmpeg.exe -Recurse -ErrorAction SilentlyContinue
+    } | Where-Object { Test-Path (Join-Path $_.DirectoryName 'ffprobe.exe') } | Select-Object -First 1
+    if ($videoFfmpeg) { $env:Path=$videoFfmpeg.DirectoryName+';'+$env:Path }
+  }
+}
 $python=Join-Path $root '.venv\Scripts\python.exe'
 if (!(Test-Path $python)) { throw 'Missing Python environment. See README.md.' }
 if ($TestWorkspace) { $env:VOICE_STUDIO_DATA=Join-Path $root 'data\tests\studio' } else { $env:VOICE_STUDIO_DATA=Join-Path $root 'data' }

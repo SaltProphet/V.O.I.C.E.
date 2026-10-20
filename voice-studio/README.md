@@ -1,5 +1,7 @@
 # Voice Studio
 
+Local transcription, reviewed script/dialogue suggestions, and description-based synthetic voice samples are documented in [AI-HELPERS.md](AI-HELPERS.md). These helpers are disabled in the shared demo. No automatic model downloads occur during ordinary use.
+
 Local voice recording, reference profiles, Qwen3-TTS cloning, non-destructive cleanup, and a basic multitrack editor for Windows 11. No Docker or paid API is used.
 
 ## Launch
@@ -25,7 +27,7 @@ The app opens with a spoken welcome player headed **A voice to show you around.*
 
 1. Click **Record microphone**, allow browser microphone permission, then **Stop recording**. Alternatively import WAV, MP3, or FLAC. Browser recordings retain their original WebM/MP4 bytes. Imports retain their original bytes and create a 48 kHz mono editing copy.
 2. Select a library item. Play it, drag waveform handles, or enter exact trim times. Select noise reduction, peak normalization, 80 Hz high-pass filtering, and fades as needed. **Apply trim & cleanup** makes a new file; original audio remains unchanged. Before/after controls appear for edited versions.
-3. Select a clean reference, preferably 3–15 seconds. If you trim it, apply the trim first. Enter exactly what that reference says, name it, and **Save voice profile**. The profile receives its own WAV copy. The application does not transcribe or verify the transcript automatically.
+3. Select a clean reference, preferably 3–15 seconds. If you trim it, apply the trim first. Enter exactly what that reference says, name it, and **Save voice profile**. The profile receives its own WAV copy. Use Transcribe selected recording to draft the transcript, then listen and correct it before saving. Recognition does not verify exact words.
 4. Select the saved profile, enter dialogue and language, then **Generate speech**. Play or download the result, compare the reference, and select any earlier result from the library. Start with one paragraph at a time. Long generations can reach the model token limit; review the result before exporting.
 5. Select audio and **Add to timeline**. Drag clips in time or between tracks. Use Position, Trim in, and Trim out for precise edits. Track sliders control linear gain from 0 to 2; mute excludes that track from playback and export. **Play mix** previews the arrangement. **Export mixed WAV** writes 48 kHz, stereo, 16-bit PCM. Summed audio receives a uniform gain reduction only when needed to prevent clipping.
 6. Name the session and **Save session**. Use **Open saved session** after reopening the application. Session files store clip positions, trims, asset references, track volume, and mute states. Save changes explicitly.
@@ -78,7 +80,7 @@ Stop the application before switching between test and personal workspaces. Test
 
 ## Boundaries
 
-This is a lightweight voice editor, with a basic timeline. It does not include automatic transcription, automatic exact-transcript checking, a full DAW plugin system, time stretching, automation lanes, automatic dialogue splitting, or a generation cancel button. Reference quality and the accuracy of the transcript directly affect cloning. Your own voice similarity still requires a recording of you and your listening assessment.
+This is a lightweight voice editor, with a basic timeline. It does not include automatic exact-transcript checking, a full DAW plugin system, time stretching, automation lanes, automatic dialogue splitting, or a generation cancel button. Reference quality and the accuracy of the transcript directly affect cloning. Your own voice similarity still requires a recording of you and your listening assessment.
 
 Machine-specific installation reports, if present locally, are excluded from the source repository.
 
@@ -97,4 +99,8 @@ Voice Studio opens in **Generate speech**. Persistent navigation provides **Reco
 
 Recording and generation are mutually exclusive. A global Stop recording control stays available during navigation. If microphone permission is left unanswered, Cancel microphone request restores the app; a subsequently granted cancelled stream is closed.
 
-No backend routes, model requirements, or saved profile/session formats changed. See `FOCUSED-WORKSPACE.md` for verification and checkpoint details. Older layout reports describe historical versions.
+The earlier focused-workspace release kept backend routes, model requirements, and saved profile/session formats unchanged. The optional AI helper additions are documented in AI-HELPERS.md. See `FOCUSED-WORKSPACE.md` for verification and checkpoint details. Older layout reports describe historical versions.
+
+Video narration is available in the separate **Video** workspace. See [VIDEO-WORKSPACE.md](VIDEO-WORKSPACE.md) for usage, verification, and limits.
+
+Recordings can now be organized into persistent folders from **Record & edit**. Select a folder for the current recording or create a new folder. Delete selected recordings from the workspace or recordings drawer; the app asks for confirmation, and pressing **Delete** while the editor is focused does the same. Recordings referenced by a saved voice profile or arrangement are protected until that reference is removed.

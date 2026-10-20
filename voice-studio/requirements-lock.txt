@@ -99,3 +99,6 @@ tzdata==2026.5
 urllib3==2.8.0
 uvicorn==0.54.0
 pedalboard==0.9.26
+av==15.1.0
+ctranslate2==4.8.3
+faster-whisper==1.2.1

@@ -11,9 +11,11 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel,Field
 from .audio import process,mix
+from . import assist
 ROOT=Path(__file__).resolve().parents[1]
 DATA=Path(os.environ.get('VOICE_STUDIO_DATA',ROOT/'data')).resolve()
-for folder in ['originals','audio','references','profiles','sessions','exports','tests']: (DATA/folder).mkdir(parents=True,exist_ok=True)
+WORKER=os.environ.get('VOICE_STUDIO_WORKER_URL','http://127.0.0.1:8766').rstrip('/')
+for folder in ['originals','audio','references','profiles','sessions','exports','tests','folders']: (DATA/folder).mkdir(parents=True,exist_ok=True)
 app=FastAPI(title='Voice Studio'); app.add_middleware(TrustedHostMiddleware,allowed_hosts=['127.0.0.1','localhost','testserver'])
 pool=ThreadPoolExecutor(max_workers=1); jobs={}; guard=threading.Lock()
 @app.middleware('http')
@@ -54,13 +56,45 @@ def register(path,name,**extra):
 async def value_error(request,exc): return JSONResponse({'detail':str(exc)},status_code=400)
 @app.get('/api/health')
 def health():
-    try: worker=httpx.get('http://127.0.0.1:8766/health',timeout=2).json()
+    try: worker=httpx.get(WORKER+'/health',timeout=2,trust_env=False).json()
     except Exception: worker={'status':'unavailable'}
     if os.environ.get('VOICE_STUDIO_DEMO')=='1':
         return {'status':'ready','inference':worker,'demo':True,'notice':'Shared demo workspace: invited guests can see files saved here. Personal studio files are separate.'}
     return {'status':'ready','inference':worker,'data':str(DATA)}
 @app.get('/api/assets')
 def assets(): return entries('audio')
+@app.get('/api/folders')
+def folders(): return entries('folders')
+class Folder(BaseModel):
+    name:str=Field(min_length=1,max_length=80)
+@app.post('/api/folders')
+def create_folder(f:Folder):
+    name=' '.join(f.name.split())
+    if not name: raise HTTPException(400,'Folder name cannot be empty.')
+    if any(x['name'].casefold()==name.casefold() for x in entries('folders')): raise HTTPException(409,'A folder with that name already exists.')
+    return save('folders',{'id':uid(),'name':name,'created':time.time()})
+@app.post('/api/assets/{id}/folder')
+def move_asset(id:str, payload:dict):
+    a=load('audio',id); folder=payload.get('folder') or ''
+    if folder: load('folders',folder)
+    a['folder']=folder; return save('audio',a)
+@app.delete('/api/assets/{id}')
+def delete_asset(id:str):
+    a=load('audio',id)
+    profiles_using=[p['name'] for p in entries('profiles') if p.get('asset')==id]
+    session_using=any(any(c.get('asset')==id for c in s.get('clips',[])) for s in entries('sessions'))
+    if profiles_using or session_using:
+        used=[]
+        if profiles_using: used.append('saved voice profile: '+', '.join(profiles_using))
+        if session_using: used.append('saved arrangement')
+        raise HTTPException(409,'Recording is still used by '+'; '.join(used)+'. Remove that reference first.')
+    for key_name in ('file','original'):
+        value=a.get(key_name)
+        if value:
+            base='audio' if key_name=='file' else 'originals'
+            (DATA/base/value).unlink(missing_ok=True)
+    (DATA/'audio'/(id+'.json')).unlink(missing_ok=True)
+    return {'deleted':id}
 @app.get('/api/assets/{id}/audio')
 def audio(id:str): return FileResponse(assetpath(id),media_type='audio/wav',filename=load('audio',id)['name']+'.wav')
 @app.get('/api/assets/{id}/original')
@@ -106,7 +140,8 @@ def profile(p:Profile):
     a=load('audio',p.asset)
     if not .5<=a['duration']<=60: raise HTTPException(400,'Choose a voice reference between 0.5 and 60 seconds.')
     id=uid(); dest=DATA/'references'/(id+'.wav'); shutil.copyfile(assetpath(p.asset),dest)
-    return save('profiles',dict(id=id,reference=dest.name,**p.model_dump()))
+    extra={'synthetic':True,'designed':True,'voice_description':a['voice_description']} if a.get('voice_description') else {}
+    return save('profiles',dict(id=id,reference=dest.name,**p.model_dump(),**extra))
 class Generation(BaseModel):
     profile:str; text:str=Field(min_length=1,max_length=10000)
     language:str='English'
@@ -114,9 +149,10 @@ def run_generation(id,g):
     try:
         jobs[id]['status']='running'; p=load('profiles',g.profile); target=DATA/'audio'/(uid()+'.wav')
         with httpx.Client(timeout=1800,trust_env=False) as client:
-            result=client.post('http://127.0.0.1:8766/generate',json={'reference':str(DATA/'references'/p['reference']),'transcript':p['transcript'],'text':g.text,'language':g.language,'output':str(target)})
+            result=client.post(WORKER+'/generate',json={'reference':str(DATA/'references'/p['reference']),'transcript':p['transcript'],'text':g.text,'language':g.language,'output':str(target)})
         if not result.is_success: raise RuntimeError(result.json().get('detail',result.text))
-        asset=register(target,'Speech '+time.strftime('%H-%M-%S'),profile=g.profile,text=g.text,generation=result.json())
+        provenance={'synthetic':True,'voice_description':p['voice_description']} if p.get('voice_description') else {}
+        asset=register(target,'Speech '+time.strftime('%H-%M-%S'),profile=g.profile,text=g.text,generation=result.json(),**provenance)
         jobs[id].update(status='complete',asset=asset)
     except httpx.ConnectError:
         jobs[id].update(status='failed',error='The local inference worker is unavailable. Restart Voice Studio using its launcher, then try again.')
@@ -124,8 +160,10 @@ def run_generation(id,g):
 @app.post('/api/generate')
 def generate(g:Generation):
     load('profiles',g.profile)
-    if any(j['status'] in ['queued','running'] for j in jobs.values()): raise HTTPException(409,'A generation is already running.')
-    id=uid(); jobs[id]={'id':id,'status':'queued'}; pool.submit(run_generation,id,g); return jobs[id]
+    with guard:
+        if any(j['status'] in ['queued','running'] for j in jobs.values()): raise HTTPException(409,'A studio job is already running.')
+        id=uid(); jobs[id]={'id':id,'status':'queued'}
+    pool.submit(run_generation,id,g); return jobs[id]
 @app.get('/api/jobs/{id}')
 def job(id:str):
     if id not in jobs: raise HTTPException(404,'Job not found. It may have ended during a restart.')
@@ -160,5 +198,60 @@ def export(s:Session):
 @app.get('/api/exports/{id}')
 def download_export(id:str):
     obj=load('exports',id); return FileResponse(DATA/'exports'/(key(id)+'.wav'),media_type='audio/wav',filename='Voice-Studio-Mix.wav')
+@app.get('/api/assist/capabilities')
+def assist_capabilities():
+    if os.environ.get('VOICE_STUDIO_DEMO')=='1': return {'enabled':False}
+    return {'enabled':True,'transcription':assist.asr_status(),
+            'writing_model':os.environ.get('VOICE_STUDIO_AI_MODEL','gpt-oss:20b'),
+            'voice_design':(Path(os.environ.get('VOICE_STUDIO_MODELS',ROOT/'models'))/'Qwen3-TTS-12Hz-1.7B-VoiceDesign/config.json').is_file()}
+
+def assist_job(fn):
+    assist.require_private()
+    with guard:
+        if any(j['status'] in ['queued','running'] for j in jobs.values()):
+            raise HTTPException(409,'A studio job is already running. Wait for it to finish.')
+        id=uid(); jobs[id]={'id':id,'status':'queued'}
+    def run():
+        jobs[id]['status']='running'
+        try: jobs[id].update(status='complete',result=fn())
+        except HTTPException as e: jobs[id].update(status='failed',error=str(e.detail))
+        except Exception as e: jobs[id].update(status='failed',error=str(e))
+    pool.submit(run)
+    return jobs[id]
+
+@app.post('/api/assist/draft')
+def draft_text(r:assist.Draft): return assist_job(lambda:assist.draft(r))
+
+@app.post('/api/assets/{id}/transcribe')
+def transcribe_asset(id:str):
+    assist.require_private()
+    a=load('audio',id)
+    if a['duration']>600: raise HTTPException(400,'Choose a recording of at most 10 minutes for transcription.')
+    def run():
+        result=assist.transcribe(assetpath(id))
+        item={'id':uid(),'asset':id,'created':time.time(),**result}
+        save('transcripts',item)
+        return item
+    return assist_job(run)
+
+class VoiceDesign(BaseModel):
+    description:str=Field(min_length=1,max_length=2000)
+    text:str=Field(min_length=1,max_length=1000)
+    language:str=Field(default='English',max_length=40)
+
+@app.post('/api/assist/voice-design')
+def design_voice(r:VoiceDesign):
+    def run():
+        target=DATA/'audio'/(uid()+'.wav')
+        with httpx.Client(timeout=1800,trust_env=False) as c:
+            response=c.post(WORKER+'/design',json={**r.model_dump(),'output':str(target)})
+        if not response.is_success: raise HTTPException(503,response.json().get('detail','Voice design failed.'))
+        return register(target,'Designed voice '+time.strftime('%H-%M-%S'),synthetic=True,
+                        voice_description=r.description,text=r.text,generation=response.json())
+    return assist_job(run)
+
+(DATA/'transcripts').mkdir(parents=True,exist_ok=True)
+from .video import create_router as video_router
+app.include_router(video_router(DATA,load,save,entries,uid,assetpath))
 DIST=ROOT/'frontend/dist'
 if DIST.exists(): app.mount('/',StaticFiles(directory=DIST,html=True),name='studio')
