@@ -23,7 +23,7 @@ The inference worker loads its model on the first generation. Allow approximatel
 
 ## Workflow
 
-The app opens with a spoken welcome player headed **A voice to show you around.** Press play for the walkthrough. Its adult female host is a synthetic voice created locally with Qwen3-TTS VoiceDesign, then reused with Base for consistent narration. Nothing plays automatically. The walkthrough and its individual sections are ordinary editable library assets, and the original three demo clips have been restored. The included demo and narrator voices are explicitly labeled and are separate from your own profiles.
+The app opens in **Immersive studio**, using the AuraVoice helix, particle field, voice palettes, and dialogue sequencer. Open **Recorder & editor** for recording, waveform editing, and multitrack arrangement. **Classic view** retains the simplified generation interface. See [AURAVOICE.md](AURAVOICE.md) for the immersive workflow and validation limits.
 
 1. Click **Record microphone**, allow browser microphone permission, then **Stop recording**. Alternatively import WAV, MP3, or FLAC. Browser recordings retain their original WebM/MP4 bytes. Imports retain their original bytes and create a 48 kHz mono editing copy.
 2. Select a library item. Play it, drag waveform handles, or enter exact trim times. Select noise reduction, peak normalization, 80 Hz high-pass filtering, and fades as needed. **Apply trim & cleanup** makes a new file; original audio remains unchanged. Before/after controls appear for edited versions.
