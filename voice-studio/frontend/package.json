@@ -9,6 +9,7 @@
     "build:immersive": "tailwindcss -i ./src/immersive/input.css -o ./src/immersive/utilities.css --minify"
   },
   "dependencies": {
+    "@fontsource/inter": "^5.3.0",
     "@fontsource/jetbrains-mono": "^5.3.0",
     "@fontsource/plus-jakarta-sans": "^5.3.0",
     "lucide": "^0.468.0",
