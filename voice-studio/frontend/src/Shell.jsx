@@ -38,7 +38,7 @@ export const assetKind=a=>a.parent?'Edited':a.synthetic?'Synthetic':a.profile?'G
 const ago=t=>{if(!t)return '';const s=Date.now()/1000-t;if(s<60)return 'just now';if(s<3600)return Math.floor(s/60)+' min ago';if(s<86400)return Math.floor(s/3600)+' h ago';if(s<172800)return 'Yesterday';return new Date(t*1000).toLocaleDateString()};
 const clock=s=>{if(!isFinite(s))return '0:00';const m=Math.floor(s/60),r=Math.floor(s%60);return m+':'+String(r).padStart(2,'0')};
 
-export function RecordingsPanel({assets,total,selected,onSelect,search,onSearch,folders,folderFilter,onFolderFilter,onImport,onCreateFolder,disabled}){
+export function RecordingsPanel({assets,total,selected,onSelect,search,onSearch,folders,folderFilter,onFolderFilter,onImport,onCreateFolder,disabled,children}){
  return <aside className="vs-panel" aria-label="Recordings">
   <div className="vs-panel-head"><h2>Recordings <span className="vs-count">{total}</span></h2><div className="vs-panel-actions">
    <label className={'vs-icon-btn'+(disabled?' disabled':'')} title="Import audio"><Icon icon={Upload} size={16}/><input type="file" aria-label="Import audio from recordings panel" accept=".wav,.mp3,.flac,audio/*" disabled={disabled} onChange={e=>{onImport(e.target.files[0]);e.target.value=''}}/></label>
@@ -46,6 +46,7 @@ export function RecordingsPanel({assets,total,selected,onSelect,search,onSearch,
   </div></div>
   <label className="vs-search"><Icon icon={Search} size={14}/><input type="search" aria-label="Search recordings in panel" placeholder="Search recordings" value={search} onChange={e=>onSearch(e.target.value)}/></label>
   <div className="vs-filters"><select aria-label="Filter recordings by folder" value={folderFilter} onChange={e=>onFolderFilter(e.target.value)}><option value="">All folders</option><option value="__unfiled">Unfiled</option>{folders.map(f=><option key={f.id} value={f.id}>{f.name}</option>)}</select></div>
+  {children}
   <div className="vs-asset-list">{assets.map(a=>{const kind=assetKind(a),on=a.id===selected;return <button key={a.id} className={'vs-asset'+(on?' selected':'')} aria-pressed={on} onClick={()=>onSelect(a.id)}>
    <span className="vs-asset-play"><Icon icon={Play} size={12} strokeWidth={2}/></span>
    <span className="vs-asset-text"><b>{a.name}</b><small>{[kind==='Generated'||kind==='Synthetic'?null:a.original?'Imported':null,a.duration.toFixed(1)+' s',ago(a.created)].filter(Boolean).join(' · ')}</small></span>
